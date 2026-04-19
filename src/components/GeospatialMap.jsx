@@ -14,8 +14,6 @@ export function GeospatialMap({ transformers }) {
   const loading = !transformers || transformers.length === 0;
   const center  = [30.9, 75.85];
 
-  const getStatus = (risk) => risk >= 70 ? "critical" : risk >= 30 ? "warning" : "safe";
-
   return (
     <div className="glass-card rounded-2xl p-5 flex flex-col"
       style={{ border: '1px solid rgba(56,189,248,0.08)' }}>
@@ -52,8 +50,8 @@ export function GeospatialMap({ transformers }) {
               url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
             />
             {transformers.map((m) => {
-              const status = getStatus(m.risk);
-              const c = COLORS[status];
+              const status = m.status; // True ML status
+              const c = COLORS[status] || COLORS.safe;
               const radius = status === "critical" ? 7 : status === "warning" ? 5 : 3.5;
               const weight = status === "critical" ? 2.5 : 1.5;
               return (
@@ -77,16 +75,16 @@ export function GeospatialMap({ transformers }) {
                       fontFamily: 'Inter, sans-serif',
                     }}>
                       <div style={{ color: c.fill, fontWeight: 700, fontSize: 13, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: c.fill, display: 'inline-block' }} />
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: c.fill, display: 'inline-block', boxShadow: `0 0 10px ${c.fill}` }} />
                         {m.id}
                       </div>
                       <div style={{ color: '#8ba3c7', fontSize: 11, marginBottom: 8 }}>{m.location}</div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px' }}>
                         {[
-                          { label: 'Supply', val: `${m.supply} kWh`, col: '#10b981' },
                           { label: 'Loss', val: `${m.loss?.toFixed(1)}%`, col: m.loss > 15 ? '#ef4444' : '#f59e0b' },
-                          { label: 'Risk Score', val: `${m.risk}`, col: c.fill },
-                          { label: 'Status', val: status.toUpperCase(), col: c.fill },
+                          { label: 'Dev', val: `${m.deviation > 0 ? '+' : ''}${m.deviation}%`, col: m.deviation > 5 ? '#ef4444' : '#8ba3c7' },
+                          { label: 'Risk', val: `${m.risk}`, col: c.fill },
+                          { label: 'Impact', val: `₹${m.financial_loss}`, col: '#ef4444' },
                         ].map((row, i) => (
                           <div key={i}>
                             <div style={{ fontSize: 9, color: '#4b6080', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700 }}>{row.label}</div>
@@ -104,9 +102,9 @@ export function GeospatialMap({ transformers }) {
       </div>
 
       <div className="mt-3 flex flex-wrap gap-5 text-[11px] justify-center">
-        <LegendDot color="#10b981" label="Safe (Risk < 30)" />
-        <LegendDot color="#f59e0b" label="Warning (30–69)" />
-        <LegendDot color="#ef4444" label="Critical — ML Theft Detected (≥ 70)" />
+        <LegendDot color="#10b981" label="Operating Nominally" />
+        <LegendDot color="#f59e0b" label="Minor Deviation" />
+        <LegendDot color="#ef4444" label="Critical — AI Flagged" />
       </div>
     </div>
   );
