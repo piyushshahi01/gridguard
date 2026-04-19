@@ -131,17 +131,17 @@ export function LandingPage({ onLaunch }) {
       </nav>
 
       {/* ── Hero ───────────────────────────────────── */}
-      <section className="relative z-10 min-h-[88vh] flex flex-col items-center justify-center text-center px-6 pt-10 pb-24">
+      <section className="relative z-10 min-h-[92vh] flex flex-col items-center justify-center text-center px-6 pt-20 pb-32">
         {/* Badge */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="flex items-center gap-2 mb-8 glass px-4 py-2 rounded-full border border-grid-blue/20"
+          className="flex items-center gap-2 mb-10 bg-white/60 backdrop-blur-md px-5 py-2.5 rounded-full border border-[#cbd5e1] shadow-sm"
         >
-          <span className="w-2 h-2 rounded-full bg-grid-green animate-gg-blink" />
-          <span className="text-[11px] font-bold text-grid-green uppercase tracking-[0.2em]">System Live</span>
-          <span className="text-[11px] text-t3 mx-1">|</span>
+          <span className="w-2 h-2 rounded-full bg-[#10b981] animate-gg-blink" />
+          <span className="text-[12px] font-bold text-[#059669] uppercase tracking-widest">System Live</span>
+          <span className="text-[12px] text-t3 mx-2">|</span>
           <span className="text-[11px] text-t2 font-semibold">1,200 Transformers Monitored Across Punjab</span>
         </motion.div>
 
@@ -150,13 +150,11 @@ export function LandingPage({ onLaunch }) {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.1 }}
-          className="text-5xl md:text-7xl font-bold leading-[1.08] mb-6 max-w-5xl font-chakra"
+          className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.05] mb-6 max-w-4xl"
         >
-          <span className="text-gradient-hero">AI-Powered Grid</span>
+          <span className="text-t1">AI-Powered Grid Support &amp;</span>
           <br />
-          <span className="text-t1">Intelligence &amp; Fraud</span>
-          <br />
-          <span className="text-gradient-blue">Detection</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Theft Automation</span>
         </motion.h1>
 
         {/* Subtitle */}
@@ -164,11 +162,11 @@ export function LandingPage({ onLaunch }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.25 }}
-          className="text-[15px] md:text-[17px] text-t2 max-w-2xl leading-relaxed mb-10"
+          className="text-[16px] md:text-[18px] text-t2 max-w-2xl leading-relaxed mb-12 font-medium"
         >
           Real-time electricity theft detection using Isolation Forest ML. Monitor
           every transformer, spot anomalies, and dispatch field inspectors — all
-          from one control room.
+          from one collaborative control room.
         </motion.p>
 
         {/* CTA */}
@@ -201,26 +199,26 @@ export function LandingPage({ onLaunch }) {
           initial={{ opacity: 0, y: 40, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
-          className="mt-16 w-full max-w-3xl glass-card rounded-2xl p-6 border border-border-grid box-glow"
+          className="mt-20 w-full max-w-4xl glass-card rounded-[2rem] p-8 border border-border-grid shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] transition-transform hover:-translate-y-2 duration-500"
         >
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-grid-red/70" />
-              <div className="w-3 h-3 rounded-full bg-grid-amber/70" />
-              <div className="w-3 h-3 rounded-full bg-grid-green/70" />
+          <div className="flex items-center gap-2 mb-6">
+            <div className="flex gap-2">
+              <div className="w-3 h-3 rounded-full bg-red-400" />
+              <div className="w-3 h-3 rounded-full bg-amber-400" />
+              <div className="w-3 h-3 rounded-full bg-green-400" />
             </div>
-            <div className="flex-1 text-center text-[11px] text-t3 font-mono">gridguard.ai/admin</div>
+            <div className="flex-1 text-center text-[12px] text-t3 font-medium tracking-wide">gridguard.ai/admin</div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: "Transformers", val: "1,200", color: "#38bdf8" },
-              { label: "Active Alerts", val: "120", color: "#ef4444" },
-              { label: "Grid Loss", val: "14%", color: "#f59e0b" },
-              { label: "ML Accuracy", val: "95%", color: "#10b981" },
+              { label: "Transformers", val: "1,200", color: "#2563eb" },
+              { label: "Active Alerts", val: "120", color: "#dc2626" },
+              { label: "Grid Loss", val: "14%", color: "#d97706" },
+              { label: "ML Accuracy", val: "95%", color: "#059669" },
             ].map((s, i) => (
-              <div key={i} className="bg-bg0/60 rounded-xl p-3 text-center border border-border-grid/50">
-                <div className="text-[11px] text-t3 uppercase tracking-widest mb-1">{s.label}</div>
-                <div className="text-[22px] font-bold font-chakra" style={{ color: s.color }}>{s.val}</div>
+              <div key={i} className="bg-white rounded-2xl p-6 border border-border-grid shadow-sm flex flex-col items-center justify-center">
+                <div className="text-[12px] text-t3 font-bold uppercase tracking-widest mb-1.5">{s.label}</div>
+                <div className="text-[28px] font-extrabold tracking-tight" style={{ color: s.color }}>{s.val}</div>
               </div>
             ))}
           </div>
