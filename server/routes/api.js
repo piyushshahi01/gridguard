@@ -142,16 +142,20 @@ router.post('/simulate', async (req, res) => {
     }
 });
 
-// POST /reset - Refreshes data by re-running the ML model with fresh cache
+// POST /reset - Refreshes data and WIPES the persistent Case database
 router.post('/reset', async (req, res) => {
     try {
+        // 1. Clear persistent cases for a fresh demo state
+        await Case.deleteMany({});
+        
         lastRunTime = 0; // bust cache
         const data = await runMLModel(false); // Force normal mode
         mlCache = data;
         lastRunTime = Date.now();
-        res.json({ message: 'Grid data refreshed. Simulation cleared.', data });
+        res.json({ message: 'System Reset. Grid data refreshed and all cases cleared.', data });
     } catch (e) {
-        res.status(500).json({ error: 'ML model failed' });
+        console.error("Reset Error:", e);
+        res.status(500).json({ error: 'System reset failed' });
     }
 });
 
@@ -186,6 +190,29 @@ router.get('/assigned-cases', async (req, res) => {
     res.json(cases);
 });
 
+// POST /batch-assign - Assign multiple inspectors at once for performance
+router.post('/batch-assign', async (req, res) => {
+    try {
+        const { assignments } = req.body; // Array of { alertId, inspectorName }
+        if (!assignments || !Array.isArray(assignments)) {
+            return res.status(400).json({ error: "Invalid assignments array" });
+        }
+
+        // 1. Perform bulk assignment in DB
+        for (const asm of assignments) {
+            await assignCaseInspector(asm.alertId, asm.inspectorName);
+        }
+
+        // 2. Force a cache refresh so the UI updates instantly
+        lastRunTime = 0; 
+        
+        res.json({ message: `Successfully dispatched ${assignments.length} priority cases.` });
+    } catch (err) {
+        console.error("Batch Dispatch Error:", err);
+        res.status(500).json({ error: "Failed to process batch dispatch" });
+    }
+});
+
 // POST /assign-inspector 
 router.post('/assign-inspector', async (req, res) => {
     const { alertId, inspectorName } = req.body;
@@ -204,6 +231,16 @@ router.post('/update-status', async (req, res) => {
     }
     await updateCaseStatus(alertId, status, notes || "");
     res.json({ message: `Status updated to ${status}` });
+});
+
+// GET /inspectors - Returns all registered responders
+router.get('/inspectors', async (req, res) => {
+    try {
+        const inspectors = await User.find({ role: 'inspector' }).select('name');
+        res.json(inspectors.map(i => i.name));
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch inspectors" });
+    }
 });
 
 // GET /inspector/:id

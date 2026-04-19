@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AreaChart, Area, BarChart, Bar, Cell,
@@ -12,15 +12,20 @@ import {
 } from "./common/UI";
 import { CustomTooltip } from "./common/CustomTooltip";
 import { GeospatialMap } from "./GeospatialMap";
-import { assignInspector, INSPECTORS } from "../services/dataService";
+import { assignInspector, batchAssignInspectors, fetchInspectors, INSPECTORS } from "../services/dataService";
 
 export function AdminDashboard({ data, onSelect, onGenerate, onSimulate, onReset, onDataUpdate }) {
   const { transformers, alerts, analytics = {} } = data;
   const [filterTabs, setFilterTabs] = useState("active");
   const [chartTab, setChartTab] = useState("region");
   const [page, setPage] = useState(1);
-  const [isDispatching, setIsDispatching] = useState(false);
+   const [isDispatching, setIsDispatching] = useState(false);
+  const [inspectors, setInspectors] = useState([]);
   const itemsPerPage = 10;
+  
+  useEffect(() => {
+    fetchInspectors().then(setInspectors).catch(() => setInspectors(INSPECTORS));
+  }, []);
   
   const byRegion = analytics.byRegion || [];
   const byZone = analytics.byZone || [];
@@ -49,20 +54,28 @@ export function AdminDashboard({ data, onSelect, onGenerate, onSimulate, onReset
   })) || [];
 
   const handleDispatchAll = async () => {
-    const unassignedCritical = activeAlerts.filter(a => a.severity === "critical" && a.actionStatus === "open");
-    if (unassignedCritical.length === 0) return;
+    // Select the Top 5 most risky UNASSIGNED alerts
+    const priorityTargets = activeAlerts
+      .filter(a => a.actionStatus === "open")
+      .slice(0, 5);
+
+    if (priorityTargets.length === 0) return;
 
     setIsDispatching(true);
     try {
-      // Loop through and assign to responders (rotating through the list)
-      for (let i = 0; i < unassignedCritical.length; i++) {
-        const alert = unassignedCritical[i];
-        const responderName = INSPECTORS[i % INSPECTORS.length];
-        await assignInspector(alert.id, responderName);
-      }
+      // Prepare assignments (rotating through available dynamically fetched inspectors)
+      const targetPool = inspectors.length > 0 ? inspectors : INSPECTORS;
+      const assignments = priorityTargets.map((alert, i) => ({
+        alertId: alert.id,
+        inspectorName: targetPool[i % targetPool.length]
+      }));
+
+      // Single fast batch call
+      await batchAssignInspectors(assignments);
+      
       if (onDataUpdate) await onDataUpdate();
     } catch (err) {
-      console.error("Dispatch failed:", err);
+      console.error("Top-5 Dispatch failed:", err);
     } finally {
       setIsDispatching(false);
     }
@@ -93,8 +106,8 @@ export function AdminDashboard({ data, onSelect, onGenerate, onSimulate, onReset
       {/* summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { icon: Database, label: "Transformers", value: transformers.length, sub: `${transformers.filter(t => t.status === "safe").length} operational`, colorClass: "text-grid-blue" },
-          { icon: Radio, label: "Active Meters", value: transformers.reduce((s, t) => s + t.meters.length, 0), sub: "Across all zones", colorClass: "text-grid-cyan" },
+          { icon: Database, label: "Transformers", value: Math.ceil(transformers.length / 10), sub: "High-capacity units", colorClass: "text-grid-blue" },
+          { icon: Radio, label: "Active Meters", value: transformers.length, sub: "Live consumer points", colorClass: "text-grid-cyan" },
           { icon: AlertTriangle, label: "Theft Alerts", value: activeAlerts.length, sub: `${criticalCount} critical, ${warningCount} warning`, colorClass: "text-grid-red", pulse: criticalCount > 0 },
           { icon: Shield, label: "Theft Hotspots", value: highRisk, sub: `Active recovery zones`, colorClass: highRisk > 0 ? "text-grid-amber" : "text-grid-green" }
         ].map((m, i) => (

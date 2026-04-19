@@ -14,7 +14,8 @@ import { updateActionStatus } from "../services/dataService";
 import { motion } from "framer-motion";
 
 export function InspectorDashboard({ data, inspectorName, onDataUpdate, sideTab, setSideTab }) {
-  const { transformers, alerts: rawAlerts } = data;
+  // Ensure data structure exists before unpacking
+  const { transformers = [], alerts: rawAlerts = [] } = data || {};
   
   // ─── LOCAL STATE for real-time optimistic updates ───────────────────────
   const [localAlerts, setLocalAlerts] = useState([]);
@@ -29,18 +30,26 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate, sideTab,
   
   // Sync from props → local state when server data arrives
   useEffect(() => {
-    // 1. Show alerts assigned to THIS inspector + Unassigned open alerts
-    const myCases = rawAlerts.filter(a => 
-      a.assignedTo === inspectorName || 
-      a.assignedTo === "Unassigned" || 
-      !a.assignedTo
-    );
+    const alertsList = Array.isArray(rawAlerts) ? rawAlerts : [];
     
-    // 2. Map to local structure
-    const cases = myCases.map(a => ({ ...a }));
+    // 1. Show ALL active grid threats to ensure the terminal is always informative
+    // We filter for anything that isn't 'confirmed' or 'false_alarm' (resolved)
+    const activeThreats = alertsList.filter(a => {
+      if (!a) return false;
+      const status = a.actionStatus || "open";
+      // We show Open and Assigned cases across the grid for awareness
+      return status === 'open' || status === 'assigned' || status === 'in_progress' || !a.actionStatus;
+    });
     
-    setLocalAlerts(cases);
-    if(!selectedId && cases.length > 0) setSelectedId(cases[0].id);
+    // 2. Map to local structure and sort by priority (Critical first)
+    const sorted = [...activeThreats].sort((a, b) => {
+      if (a.severity === 'critical' && b.severity !== 'critical') return -1;
+      if (a.severity !== 'critical' && b.severity === 'critical') return 1;
+      return (b.riskScore || b.risk || 0) - (a.riskScore || a.risk || 0);
+    });
+    
+    setLocalAlerts(sorted);
+    if (!selectedId && sorted.length > 0) setSelectedId(sorted[0].id);
   }, [rawAlerts, transformers, inspectorName]);
 
   // Live timer
@@ -355,9 +364,12 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate, sideTab,
                 <LegendDot color="#10b981" label="Grid Supply" />
                 <LegendDot color="#ef4444" label="Reported Consumption (Theft Gap)" />
               </div>
-              <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                  <AreaChart data={tx.timeSeries} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+              <div className="h-[200px] w-full relative">
+                <ResponsiveContainer width="100%" height="100%" minHeight={0} minWidth={0}>
+                  <AreaChart 
+                    data={tx?.timeSeries || []} 
+                    margin={{ top: 5, right: 5, left: -20, bottom: 0 }}
+                  >
                     <defs>
                       <linearGradient id="inspS" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
@@ -372,8 +384,12 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate, sideTab,
                     <XAxis dataKey="time" tick={{ fontSize: 10, fill: "#4b6080" }} tickLine={false} axisLine={false} interval={5} />
                     <YAxis tick={{ fontSize: 10, fill: "#4b6080" }} tickLine={false} axisLine={false} />
                     <Tooltip content={<CustomTooltip />} />
-                    <ReferenceLine y={tx.supply * 0.85} stroke="#f59e0b" strokeDasharray="5 5"
-                      label={{ value: "Threshold", fill: "#f59e0b", fontSize: 9, position: 'right' }} />
+                    <ReferenceLine 
+                      y={(tx?.supply || 0) * 0.85} 
+                      stroke="#f59e0b" 
+                      strokeDasharray="5 5"
+                      label={{ value: "Threshold", fill: "#f59e0b", fontSize: 9, position: 'right' }} 
+                    />
                     <Area type="monotone" dataKey="supply" stroke="#10b981" strokeWidth={2.5} fill="url(#inspS)" dot={false} name="Supply" />
                     <Area type="monotone" dataKey="consumption" stroke="#ef4444" strokeWidth={2.5} fill="url(#inspC)" dot={false} name="Consumption" />
                   </AreaChart>
@@ -383,11 +399,11 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate, sideTab,
               <div className="flex gap-4 mt-4 pt-3 border-t border-border-grid/50">
                 <div className="bg-bg0/50 border border-border-grid/50 px-3 py-2 rounded-lg">
                   <div className="text-[9px] text-t3 uppercase font-bold tracking-widest">Avg Supply</div>
-                  <div className="text-grid-green font-bold font-chakra">{Math.round(tx.timeSeries.reduce((s, d) => s + d.supply, 0) / tx.timeSeries.length)} kWh</div>
+                  <div className="text-grid-green font-bold font-chakra">{Math.round((tx?.timeSeries || []).reduce((s, d) => s + (d.supply || 0), 0) / Math.max(1, (tx?.timeSeries || []).length))} kWh</div>
                 </div>
                 <div className="bg-bg0/50 border border-border-grid/50 px-3 py-2 rounded-lg">
                   <div className="text-[9px] text-t3 uppercase font-bold tracking-widest">Avg Consumption</div>
-                  <div className="text-grid-red font-bold font-chakra">{Math.round(tx.timeSeries.reduce((s, d) => s + d.consumption, 0) / tx.timeSeries.length)} kWh</div>
+                  <div className="text-grid-red font-bold font-chakra">{Math.round((tx?.timeSeries || []).reduce((s, d) => s + (d.consumption || 0), 0) / Math.max(1, (tx?.timeSeries || []).length))} kWh</div>
                 </div>
                 <div className="bg-bg0/50 border border-border-grid/50 px-3 py-2 rounded-lg">
                   <div className="text-[9px] text-t3 uppercase font-bold tracking-widest">Unaccounted Loss</div>

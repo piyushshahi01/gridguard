@@ -26,6 +26,11 @@ export async function assignInspector(alertId, inspectorName) {
     return res.data;
 }
 
+export async function batchAssignInspectors(assignments) {
+    const res = await axios.post(`${API_URL}/batch-assign`, { assignments });
+    return res.data;
+}
+
 export async function updateActionStatus(alertId, status, notes) {
     const res = await axios.post(`${API_URL}/update-status`, { alertId, status, notes });
     return res.data;
@@ -36,5 +41,10 @@ export async function fetchAssignedCases(inspector) {
     const res = await axios.get(`${API_URL}/assigned-cases`, {
         params: { inspector }
     });
+    return res.data;
+}
+
+export async function fetchInspectors() {
+    const res = await axios.get(`${API_URL}/inspectors`);
     return res.data;
 }
