@@ -3,8 +3,16 @@ from sklearn.ensemble import IsolationForest
 import json
 import sys
 import os
+import argparse
+import random
+from datetime import datetime, timedelta
+import math
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--theft", action="store_true", help="Simulate active theft anomalies")
+    args = parser.parse_args()
+
     try:
         # Load CSV from the same directory as script
         csv_path = os.path.join(os.path.dirname(__file__), "punjab_gridguard_deep_data_1200.csv")
@@ -33,11 +41,11 @@ def main():
         transformers = []
         alerts = []
         
-        import random
-        from datetime import datetime, timedelta
-        import math
-
         now = datetime.now()
+        
+        # Determine current second of the minute to create a "live wiggle" effect
+        # This creates a small 10-second oscillation that makes the graph move naturally
+        wiggle = 1.0 + (math.sin(now.second / 10.0) * 0.02) 
 
         # Real-world electricity load curve - multipliers by hour of day (0..23)
         # Based on typical Punjab residential/industrial load patterns:
@@ -49,6 +57,9 @@ def main():
             1.05, 0.98, 0.95, 0.97, 1.00, 1.10,   # 12–17 pm (midday + pre-peak)
             1.15, 1.20, 1.18, 1.10, 0.90, 0.70,   # 18–23 pm (evening peak + wind down)
         ]
+
+        current_hour = now.hour
+        current_mult = HOURLY_LOAD_CURVE[current_hour]
 
         for idx, row in df.iterrows():
             base_supply = float(row["supply_kwh"])
@@ -77,8 +88,8 @@ def main():
                 hr_label = f"{h:02d}:00"
                 curve_mult = HOURLY_LOAD_CURVE[h]
 
-                # Small random noise ±3% per hour for natural variation
-                noise = random.uniform(0.97, 1.03)
+                # Jagged noise ±10% per hour for natural variation
+                noise = random.uniform(0.90, 1.10)
                 supply_h = round(base_supply * curve_mult * noise, 1)
 
                 # For anomalies: inject elevated loss in recent hours (16–23) to create visible divergence
@@ -95,18 +106,56 @@ def main():
                 })
 
 
+            # Increased noise ±6% + drastic wiggle ±4% for high vibrancy
+            # Using both sin and cos for a more dynamic "organic" feel
+            wiggle_drastic = 1.0 + (math.sin(now.second / 5.0) * 0.04) + (math.cos(now.second / 3.0) * 0.02)
+            live_noise = random.uniform(0.94, 1.06) * wiggle_drastic
+            live_supply = round(base_supply * current_mult * live_noise)
+            
+            # Anomaly injection logic
+            # If simulation mode is ON, artificially pick 5 transformers to show HIGH theft
+            force_simulation = False
+            if args.theft and (idx % 25 == 0): # Force simulation on every 25th row
+                force_simulation = True
+
+            if is_anomaly or force_simulation:
+                # If forced simulation, use a very high theft factor (30-45% loss)
+                if force_simulation:
+                    live_theft_factor = 1.45 # 45% additional loss offset
+                else:
+                    live_theft_factor = 1.0 + (loss_pct * 1.5)
+                
+                live_consume = round(base_consume * current_mult * live_noise * (1.0 / live_theft_factor))
+            else:
+                live_consume = round(base_consume * current_mult * live_noise)
+
+            # Re-calculate live loss and percentage
+            live_loss_kwh = round(live_supply - live_consume, 1)
+            live_actual_loss_pct = round((live_loss_kwh / live_supply * 100), 1) if live_supply > 0 else 0
+            
+            # THEFT CALCULATION logic: Anything above expected baseline is "Theft"
+            technical_loss_kwh = live_supply * (expected_pct / 100)
+            theft_kwh = max(0, live_loss_kwh - technical_loss_kwh)
+            theft_loss_pct = round((theft_kwh / live_supply * 100), 1) if live_supply > 0 else 0
+            theft_financial_cost = round(theft_kwh * 8.5) # Punjab revenue recovery rate
+            
+            total_loss_financial_cost = round(live_loss_kwh * 8.5)
+
             t = {
                 "id": row["transformer_id"],
                 "location": str(row["region"]) + " (" + zone + ")",
                 "lat": float(row["lat"]),
                 "lon": float(row["lon"]),
-                "supply": round(base_supply),
-                "consumption": round(base_consume),
-                "loss": actual_loss_val,
+                "supply": live_supply,
+                "consumption": live_consume,
+                "total_loss": live_actual_loss_pct,
+                "theft_loss": theft_loss_pct,
+                "theft_kwh": round(theft_kwh, 1),
                 "expected": expected_pct,
-                "deviation": deviation,
-                "loss_kwh": loss_kwh,
-                "financial_loss": financial_cost,
+                "deviation": round(live_actual_loss_pct - expected_pct, 1),
+                "total_loss_kwh": live_loss_kwh,
+                "financial_loss": theft_financial_cost, # Focus on RECOVERY
+                "total_financial_loss": total_loss_financial_cost,
                 "risk": round(float(row["risk_score"])),
                 "status": "critical" if is_anomaly and float(row["risk_score"]) >= 60 else "warning" if float(row["risk_score"]) >= 30 else "safe",
                 "timeSeries": ts,
@@ -124,12 +173,14 @@ def main():
                     "type": "theft",
                     "severity": "critical",
                     "actionStatus": "open",
-                    "loss": t["loss"],
+                    "loss": t["total_loss"],
+                    "theft_loss": t["theft_loss"],
                     "expected": expected_pct,
-                    "deviation": "+"+str(deviation) if deviation > 0 else str(deviation),
-                    "loss_kwh": loss_kwh,
-                    "financial_loss": financial_cost,
-                    "message": f"Observed {t['loss']}% loss in a {zone} feeder where expected baseline is {expected_pct}%, indicating highly abnormal non-technical loss. Financial impact: ₹{financial_cost}.",
+                    "deviation": "+"+str(t["deviation"]) if t["deviation"] > 0 else str(t["deviation"]),
+                    "loss_kwh": t["total_loss_kwh"],
+                    "theft_kwh": t["theft_kwh"],
+                    "financial_loss": theft_financial_cost,
+                    "message": f"AI Engine flagged {t['theft_loss']}% active theft on {t['id']}. Baseline {expected_pct}% exceeded by {t['deviation']}%. Revenue Recovery potential: ₹{theft_financial_cost}.",
                     "time": "Just Now",
                     "timestamp": "Just Now",
                     "status": "active"

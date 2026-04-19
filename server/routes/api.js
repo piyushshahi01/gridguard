@@ -19,10 +19,11 @@ const __dirname = path.dirname(__filename);
 const router = express.Router();
 
 // Helper: run ML model and return parsed result
-function runMLModel() {
+function runMLModel(simulateTheft = false) {
     return new Promise((resolve, reject) => {
         const scriptPath = path.join(__dirname, '..', 'ml_model.py');
-        exec(`python "${scriptPath}"`, { maxBuffer: 1024 * 1024 * 10 }, (err, stdout, stderr) => {
+        const cmd = `python "${scriptPath}" ${simulateTheft ? '--theft' : ''}`;
+        exec(cmd, { maxBuffer: 1024 * 1024 * 10 }, (err, stdout, stderr) => {
             if (err) return reject(stderr || err);
             try {
                 const data = JSON.parse(stdout);
@@ -39,7 +40,7 @@ function runMLModel() {
 let mlCache = null;
 let mlCacheStale = true;
 let lastRunTime = 0;
-const CACHE_TTL_MS = 30_000; // refresh every 30s
+const CACHE_TTL_MS = 5_000; // refresh every 5s
 
 async function getMLData() {
     const now = Date.now();
@@ -57,7 +58,7 @@ async function getMLData() {
 // Warm up the cache immediately on server start
 runMLModel().then(d => { mlCache = d; lastRunTime = Date.now(); console.log('ML cache warmed.'); }).catch(() => {});
 
-// Background refresh every 30s so data always appears live
+// Background refresh every 5s so data always appears live
 setInterval(() => {
     runMLModel().then(d => { mlCache = d; lastRunTime = Date.now(); }).catch(() => {});
 }, CACHE_TTL_MS);
@@ -77,8 +78,10 @@ router.get('/data', async (req, res) => {
 router.post('/simulate', async (req, res) => {
     try {
         lastRunTime = 0; // bust cache
-        const data = await getMLData();
-        res.json({ message: 'ML model re-run. Anomalies detected from CSV.', data });
+        const data = await runMLModel(true); // Forced theft mode
+        mlCache = data;
+        lastRunTime = Date.now();
+        res.json({ message: 'ML model re-run. Active theft anomalies injected.', data });
     } catch (e) {
         res.status(500).json({ error: 'ML model failed' });
     }

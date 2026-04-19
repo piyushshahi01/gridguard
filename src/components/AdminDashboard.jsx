@@ -68,8 +68,8 @@ export function AdminDashboard({ data, onSelect, onGenerate, onSimulate, onReset
         {[
           { icon: Database, label: "Transformers", value: transformers.length, sub: `${transformers.filter(t => t.status === "safe").length} operational`, colorClass: "text-grid-blue" },
           { icon: Radio, label: "Active Meters", value: transformers.reduce((s, t) => s + t.meters.length, 0), sub: "Across all zones", colorClass: "text-grid-cyan" },
-          { icon: AlertTriangle, label: "Open Alerts", value: activeAlerts.length, sub: `${criticalCount} critical, ${warningCount} warning`, colorClass: "text-grid-red", pulse: criticalCount > 0 },
-          { icon: Shield, label: "High-Risk Zones", value: highRisk, sub: `${Math.round((totalConsumption - totalSupply) / totalSupply * 100)}% avg excess`, colorClass: highRisk > 0 ? "text-grid-amber" : "text-grid-green" }
+          { icon: AlertTriangle, label: "Theft Alerts", value: activeAlerts.length, sub: `${criticalCount} critical, ${warningCount} warning`, colorClass: "text-grid-red", pulse: criticalCount > 0 },
+          { icon: Shield, label: "Theft Hotspots", value: highRisk, sub: `Active recovery zones`, colorClass: highRisk > 0 ? "text-grid-amber" : "text-grid-green" }
         ].map((m, i) => (
           <motion.div
             key={i}
@@ -104,7 +104,7 @@ export function AdminDashboard({ data, onSelect, onGenerate, onSimulate, onReset
           </div>
 
           <div className="h-[230px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               {chartTab === "region" ? (
                 <BarChart data={byRegion} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
@@ -157,8 +157,8 @@ export function AdminDashboard({ data, onSelect, onGenerate, onSimulate, onReset
           <div className="mt-4 flex flex-wrap gap-4">
             <StatPill label="Total Supply" value={`${(totalSupply / 1000).toFixed(1)} MWh`} colorClass="text-grid-green" />
             <StatPill label="Total Consumption" value={`${(totalConsumption / 1000).toFixed(1)} MWh`} colorClass="text-grid-red" />
-            <StatPill label="Grid Loss" value={`${Math.round(Math.abs(totalConsumption - totalSupply) / totalSupply * 100)}%`}
-              colorClass={totalConsumption > totalSupply ? "text-grid-red" : "text-grid-green"} />
+            <StatPill label="Theft Recovery" value={`₹${transformers.reduce((s,t) => s + (t.financial_loss || 0), 0).toLocaleString()}`}
+              colorClass="text-grid-blue" />
           </div>
         </div>
 
@@ -230,8 +230,8 @@ export function AdminDashboard({ data, onSelect, onGenerate, onSimulate, onReset
                   <th className="p-3.5 pl-5">ID</th>
                   <th className="p-3.5">Location</th>
                   <th className="p-3.5">Supply (kWh)</th>
-                  <th className="p-3.5">Consume (kWh)</th>
-                  <th className="p-3.5">Loss %</th>
+                  <th className="p-3.5">Theft %</th>
+                  <th className="p-3.5">Recovery (₹)</th>
                   <th className="p-3.5">Risk Score</th>
                   <th className="p-3.5">Status</th>
                   <th className="p-3.5 pr-5"></th>
@@ -245,11 +245,11 @@ export function AdminDashboard({ data, onSelect, onGenerate, onSimulate, onReset
                     <td className="p-3.5 pl-5 font-bold text-grid-blue">{t.id}</td>
                     <td className="p-3.5 text-t1 font-medium">{t.location}</td>
                     <td className="p-3.5 text-t2">{t.supply}</td>
-                    <td className={`p-3.5 ${t.consumption > t.supply ? "text-grid-red font-semibold" : "text-t2"}`}>
-                      {t.consumption}
+                    <td className={`p-3.5 font-bold ${t.theft_loss > 10 ? "text-grid-red" : "text-grid-amber"}`}>
+                      {t.theft_loss}%
                     </td>
-                    <td className={`p-3.5 font-medium ${Math.abs(t.loss) > 15 ? "text-grid-red" : Math.abs(t.loss) > 8 ? "text-grid-amber" : "text-grid-green"}`}>
-                      {t.loss > 0 ? "+" : ""}{t.loss}%
+                    <td className="p-3.5 font-medium text-grid-blue">
+                      ₹{t.financial_loss?.toLocaleString()}
                     </td>
                     <td className="p-3.5">
                       <div className="flex items-center gap-2.5">

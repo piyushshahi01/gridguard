@@ -14,7 +14,7 @@ import { SectionTitle, LegendDot, Badge, statusColor, CtrlBtn } from "./common/U
 function Spark({ data, color }) {
   if (!data || data.length < 2) return null;
   return (
-    <ResponsiveContainer width="100%" height={40}>
+    <ResponsiveContainer width="100%" height={40} minWidth={0} minHeight={0}>
       <LineChart data={data} margin={{ top: 2, right: 0, left: 0, bottom: 2 }}>
         <Line type="monotone" dataKey="v" stroke={color} strokeWidth={2} dot={false} />
       </LineChart>
@@ -54,7 +54,7 @@ function RegionCard({ name, supply, consumption, anomalies, count }) {
           <div className="text-[12px] font-bold text-grid-green font-chakra">{(supply / 1000).toFixed(1)} MWh</div>
         </div>
         <div>
-          <div className="text-[9px] text-t3 uppercase font-bold tracking-widest">Loss %</div>
+          <div className="text-[9px] text-t3 uppercase font-bold tracking-widest">Theft %</div>
           <div className={`text-[12px] font-bold font-chakra ${parseFloat(loss) > 15 ? "text-grid-red" : "text-grid-amber"}`}>{loss}%</div>
         </div>
         <div>
@@ -82,10 +82,14 @@ export function GridMonitor({ data, onGenerate, onSimulate, onReset }) {
   // Compute live totals from real ML data
   const totalSupply      = transformers.reduce((s, t) => s + t.supply, 0);
   const totalConsumption = transformers.reduce((s, t) => s + t.consumption, 0);
+  const totalTheftKwh    = transformers.reduce((s, t) => s + (t.theft_kwh || 0), 0);
+  const totalTheftValue  = transformers.reduce((s, t) => s + (t.financial_loss || 0), 0);
+  
   const lossKwh          = totalSupply - totalConsumption;
-  const lossPct          = totalSupply > 0 ? ((lossKwh / totalSupply) * 100).toFixed(2) : 0;
+  const theftPct         = totalSupply > 0 ? ((totalTheftKwh / totalSupply) * 100).toFixed(1) : 0;
+  
   const revenuePerKwh    = 8.5; // Rs per kWh (Punjab tariff approx)
-  const revenueLost      = (lossKwh * revenuePerKwh).toLocaleString("en-IN", { maximumFractionDigits: 0 });
+  const theftRevenue     = totalTheftValue.toLocaleString("en-IN", { maximumFractionDigits: 0 });
   const criticalTx       = transformers.filter(t => t.status === "critical").length;
   const warningTx        = transformers.filter(t => t.status === "warning").length;
   const activeAlerts     = alerts.filter(a => a.actionStatus === "open" || a.actionStatus === "assigned");
@@ -96,7 +100,7 @@ export function GridMonitor({ data, onGenerate, onSimulate, onReset }) {
   // Update rolling trend on each data change
   useEffect(() => {
     const now = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-    const next = [...trendRef.current, { time: now, loss: parseFloat(lossPct), supply: Math.round(totalSupply), consumption: Math.round(totalConsumption), v: parseFloat(lossPct) }];
+    const next = [...trendRef.current, { time: now, theft: parseFloat(theftPct), supply: Math.round(totalSupply), consumption: Math.round(totalConsumption), v: parseFloat(theftPct) }];
     trendRef.current = next.slice(-20);
     setTrend([...trendRef.current]);
     setLastUpdated(0);
@@ -140,10 +144,10 @@ export function GridMonitor({ data, onGenerate, onSimulate, onReset }) {
         {[
           { icon: Zap, label: "Total Supply", value: `${(totalSupply / 1000).toFixed(1)} MWh`, sub: "Grid output", color: "text-grid-green", spark: trend.map(d => ({ v: d.supply })), sparkColor: "#10b981" },
           { icon: Activity, label: "Consumption", value: `${(totalConsumption / 1000).toFixed(1)} MWh`, sub: "Metered demand", color: "text-grid-blue", spark: trend.map(d => ({ v: d.consumption })), sparkColor: "#38bdf8" },
-          { icon: TrendingDown, label: "Grid Loss", value: `${lossPct}%`, sub: `${(lossKwh / 1000).toFixed(1)} MWh lost`, color: parseFloat(lossPct) > 15 ? "text-grid-red" : "text-grid-amber", spark: trend.map(d => ({ v: d.loss })), sparkColor: parseFloat(lossPct) > 15 ? "#ef4444" : "#f59e0b" },
-          { icon: DollarSign, label: "Revenue Lost", value: `₹${revenueLost}`, sub: `@ ₹${revenuePerKwh}/kWh`, color: "text-grid-red", spark: null, sparkColor: "#ef4444" },
-          { icon: Flame, label: "Critical", value: criticalTx, sub: "ML flagged", color: "text-grid-red", spark: null, sparkColor: "#ef4444" },
-          { icon: AlertTriangle, label: "Active Alerts", value: activeAlerts.length, sub: `${warningTx} warnings`, color: activeAlerts.length > 0 ? "text-grid-amber" : "text-grid-green", spark: null, sparkColor: "#f59e0b" },
+          { icon: Shield, label: "Theft Detected", value: `${theftPct}%`, sub: `${(totalTheftKwh / 1000).toFixed(2)} MWh theft`, color: parseFloat(theftPct) > 8 ? "text-grid-red" : "text-grid-amber", spark: trend.map(d => ({ v: d.theft })), sparkColor: parseFloat(theftPct) > 8 ? "#ef4444" : "#f59e0b" },
+          { icon: DollarSign, label: "Theft Impact", value: `₹${theftRevenue}`, sub: "Recovery potential", color: "text-grid-red", spark: null, sparkColor: "#ef4444" },
+          { icon: Flame, label: "Active Theft", value: criticalTx, sub: "High-risk nodes", color: "text-grid-red", spark: null, sparkColor: "#ef4444" },
+          { icon: AlertTriangle, label: "Investigations", value: activeAlerts.length, sub: "Ongoing cases", color: activeAlerts.length > 0 ? "text-grid-amber" : "text-grid-green", spark: null, sparkColor: "#f59e0b" },
         ].map((card, i) => (
           <div key={i} className="bg-bg2 border border-border-grid rounded-xl p-4 flex flex-col gap-1 hover:border-border-hov transition-all">
             <div className="flex items-center gap-2">
@@ -164,7 +168,7 @@ export function GridMonitor({ data, onGenerate, onSimulate, onReset }) {
         <div className="bg-bg2 border border-border-grid rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <SectionTitle label="Live Loss Trend — Rolling 20 Ticks" />
-            {parseFloat(lossPct) > 15 && (
+            {parseFloat(theftPct) > 15 && (
               <div className="flex items-center gap-1.5 bg-grid-red/10 border border-grid-red/20 px-2.5 py-1 rounded-md animate-pulse">
                 <span className="w-1.5 h-1.5 rounded-full bg-grid-red" />
                 <span className="text-[9px] text-grid-red font-bold uppercase tracking-widest">Spike Detected</span>
@@ -172,12 +176,12 @@ export function GridMonitor({ data, onGenerate, onSimulate, onReset }) {
             )}
           </div>
           <div className="flex gap-4 mb-4">
-            <LegendDot color="#10b981" label="Supply (kWh)" />
-            <LegendDot color="#38bdf8" label="Consumption (kWh)" />
-            <LegendDot color="#ef4444" label="Loss %" />
+            <LegendDot color="#10b981" label="Total Supply" />
+            <LegendDot color="#38bdf8" label="Consumption" />
+            <LegendDot color="#ef4444" label="Theft Variance %" />
           </div>
           <div className="h-[230px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <AreaChart data={trend} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="gms" x1="0" y1="0" x2="0" y2="1">
@@ -195,11 +199,11 @@ export function GridMonitor({ data, onGenerate, onSimulate, onReset }) {
                 <YAxis yAxisId="pct" orientation="right" tick={{ fontSize: 9, fill: "#4b6080" }} tickLine={false} axisLine={false} domain={[0, 30]} />
                 <Tooltip
                   contentStyle={{ background: "#0d1b2a", border: "1px solid #1e2d45", borderRadius: 8, fontSize: 11 }}
-                  formatter={(val, name) => [name === "Loss %" ? `${val}%` : `${val} kWh`, name]}
+                  formatter={(val, name) => [name === "Theft %" ? `${val}%` : `${val} kWh`, name]}
                 />
                 <Area yAxisId="kwh" type="monotone" dataKey="supply" stroke="#10b981" strokeWidth={2} fill="url(#gms)" name="Supply (kWh)" dot={false} />
                 <Area yAxisId="kwh" type="monotone" dataKey="consumption" stroke="#38bdf8" strokeWidth={2} fill="url(#gmc)" name="Consumption (kWh)" dot={false} />
-                <Line yAxisId="pct" type="monotone" dataKey="loss" stroke="#ef4444" strokeWidth={2} dot={false} name="Loss %" />
+                <Line yAxisId="pct" type="monotone" dataKey="theft" stroke="#ef4444" strokeWidth={2} dot={false} name="Theft %" />
                 <ReferenceLine yAxisId="pct" y={15} stroke="#f59e0b" strokeDasharray="5 5"
                   label={{ value: "15% threshold", fill: "#f59e0b", fontSize: 9, position: "right" }} />
               </AreaChart>
@@ -225,7 +229,9 @@ export function GridMonitor({ data, onGenerate, onSimulate, onReset }) {
                 No active anomalies detected
               </div>
             )}
-            {activeAlerts.slice(0, 15).map((a, i) => (
+            {activeAlerts
+              .sort((a, b) => (b.theft_loss || 0) - (a.theft_loss || 0))
+              .slice(0, 15).map((a, i) => (
               <div key={a.id || i}
                 className={`flex items-start gap-3 p-3 rounded-lg border border-l-4 transition-all
                   ${a.severity === "critical"
@@ -240,7 +246,7 @@ export function GridMonitor({ data, onGenerate, onSimulate, onReset }) {
                     <span className="text-[9px] text-t3 shrink-0">{a.time || "Just Now"}</span>
                   </div>
                   <div className="text-[11px] text-t2 mt-0.5 truncate">{a.location}</div>
-                  <div className="text-[10px] text-t3 mt-0.5">Loss: <span className="text-grid-red font-bold">{a.loss}%</span></div>
+                  <div className="text-[10px] text-t3 mt-0.5">Theft: <span className="text-grid-red font-bold">{a.theft_loss}%</span></div>
                 </div>
               </div>
             ))}

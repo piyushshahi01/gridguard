@@ -11,6 +11,7 @@ import {
 } from "./common/UI";
 import { CustomTooltip } from "./common/CustomTooltip";
 import { updateActionStatus } from "../services/dataService";
+import { motion } from "framer-motion";
 
 export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
   const { transformers, alerts: rawAlerts } = data;
@@ -104,7 +105,7 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
   const inProgressCases = activeList.length;
 
   const actionStatusLabel = {
-    open: "Unassigned", assigned: "Assigned", in_progress: "In Progress", checked: "Completed", confirmed: "Theft Confirmed", false_alarm: "Resolved",
+    open: "Unassigned", assigned: "Assigned", in_progress: "Investigating", checked: "Completed", confirmed: "Fraud Confirmed", false_alarm: "Resolved",
   };
 
   const actionStatusColor = {
@@ -121,10 +122,10 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex gap-4 flex-1 flex-wrap">
           {[
-            { icon: Activity, label: "Active Cases", value: totalCases, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100" },
+            { icon: Activity, label: "Theft Cases", value: totalCases, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100" },
             { icon: AlertTriangle, label: "Critical", value: criticalCases, color: "text-red-600", bg: "bg-red-50", border: "border-red-100" },
-            { icon: TrendingUp, label: "In Progress", value: inProgressCases, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
-            { icon: CheckCircle, label: "Resolved", value: resolvedCases, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
+            { icon: TrendingUp, label: "Under Enforcement", value: inProgressCases, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
+            { icon: CheckCircle, label: "Recovered", value: resolvedCases, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
           ].map((s, i) => (
             <motion.div 
               key={i} 
@@ -282,11 +283,11 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
                 </div>
               </div>
               <div className="flex gap-4 mb-4">
-                <LegendDot color="#10b981" label="Transformer Supply" />
-                <LegendDot color="#ef4444" label="Metered Consumption" />
+                <LegendDot color="#10b981" label="Grid Supply" />
+                <LegendDot color="#ef4444" label="Reported Consumption (Theft Gap)" />
               </div>
               <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <AreaChart data={tx.timeSeries} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="inspS" x1="0" y1="0" x2="0" y2="1">
@@ -349,13 +350,13 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
                 </blockquote>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <span className="text-[10px] bg-bg0/60 border border-border-grid text-t2 px-2.5 py-1 rounded-md font-bold uppercase tracking-widest">
-                    Loss: {selected.loss}%
+                    Total Loss: {selected.loss}%
                   </span>
                   <span className="text-[10px] bg-bg0/60 border border-border-grid text-t2 px-2.5 py-1 rounded-md font-bold uppercase tracking-widest">
-                    Expected: {selected.expected}%
+                    Theft: {selected.theft_loss}%
                   </span>
                   <span className="text-[10px] bg-grid-red/10 border border-grid-red/20 text-grid-red px-2.5 py-1 rounded-md font-bold uppercase tracking-widest">
-                    Impact: ₹{selected.financial_loss}
+                    Recovery: ₹{selected.financial_loss}
                   </span>
                 </div>
               </div>
