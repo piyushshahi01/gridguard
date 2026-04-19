@@ -31,7 +31,7 @@ function GridBg() {
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-bg0">
       {/* Moving grid */}
-      <div className="absolute inset-0 opacity-[0.05]"
+      <div className="absolute inset-0 opacity-[0.05] animate-grid-move"
         style={{
           backgroundImage: 'linear-gradient(to right, #64748b 1px, transparent 1px), linear-gradient(to bottom, #64748b 1px, transparent 1px)',
           backgroundSize: '4rem 4rem',
@@ -154,7 +154,7 @@ export function LandingPage({ onLaunch }) {
         >
           <span className="text-t1">AI-Powered Grid Support &amp;</span>
           <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Theft Automation</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-600 bg-[length:200%_auto] animate-gradient-shift">Theft Automation</span>
         </motion.h1>
 
         {/* Subtitle */}
