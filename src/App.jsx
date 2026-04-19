@@ -31,15 +31,7 @@ function App() {
     }
   }, []);
 
-  const role = user?.role || 'admin';
-
-  const setRole = (newRole) => {
-    if (user) {
-      const updated = { ...user, role: newRole };
-      setUser(updated);
-      localStorage.setItem('gridguard_user', JSON.stringify(updated));
-    }
-  };
+  const role = user?.role || 'inspector';
 
   const handleAuth = (userData) => {
     setUser(userData);
@@ -117,7 +109,6 @@ function App() {
   return (
     <Layout
       role={role}
-      setRole={setRole}
       sideTab={sideTab}
       setSideTab={setSideTab}
       criticalCount={criticalCount}
@@ -144,10 +135,17 @@ function App() {
             onGenerate={handleGenerate}
             onSimulate={handleSimulate}
             onReset={handleReset}
+            onDataUpdate={loadData}
           />
         )
       ) : (
-        <InspectorDashboard data={data} inspectorName={user?.name || "J. Rajan"} onDataUpdate={loadData} />
+        <InspectorDashboard 
+          data={data} 
+          inspectorName={user?.name || "J. Rajan"} 
+          onDataUpdate={loadData} 
+          sideTab={sideTab}
+          setSideTab={setSideTab}
+        />
       )}
     </Layout>
   );

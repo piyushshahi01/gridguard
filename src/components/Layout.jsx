@@ -2,7 +2,7 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, LayoutDashboard, Bell, Radio, Shield, FileText, Database, Users, Activity, AlertTriangle, LogOut } from "lucide-react";
 
-export function Layout({ children, role, setRole, sideTab, setSideTab, criticalCount, setSelectedTx, user, onLogout }) {
+export function Layout({ children, role, sideTab, setSideTab, criticalCount, setSelectedTx, user, onLogout }) {
   const ADMIN_TABS = [
     { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { id: "alerts",    icon: Bell,            label: "Alerts" },
@@ -71,25 +71,14 @@ export function Layout({ children, role, setRole, sideTab, setSideTab, criticalC
         </AnimatePresence>
 
         <div className="ml-auto flex items-center gap-3">
-          {/* Role switcher */}
-          <div className="hidden md:flex rounded-xl p-1 gap-1"
-            style={{ background: '#f1f5f9', border: '1px solid #e2e8f0' }}>
-            {[
-              { id: "admin",     icon: <Database size={13} />, label: "Admin" },
-              { id: "inspector", icon: <Users size={13} />,    label: "Inspector" },
-            ].map(r => (
-              <button
-                key={r.id}
-                onClick={() => { setRole(r.id); handleTabClick("dashboard"); }}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-[12px] font-bold transition-all duration-300 cursor-pointer"
-                style={role === r.id
-                  ? { background: 'linear-gradient(135deg,#38bdf8,#6366f1)', color: 'white', boxShadow: '0 0 16px rgba(56,189,248,0.3)' }
-                  : { color: '#4b6080' }
-                }
-              >
-                {r.icon} {r.label}
-              </button>
-            ))}
+          {/* Account Role Badge */}
+          <div className={`hidden md:flex items-center gap-2 px-4 py-1.5 rounded-lg text-[12px] font-bold border ${
+            role === 'admin' 
+              ? 'bg-grid-green/10 border-grid-green/30 text-grid-green' 
+              : 'bg-grid-blue/10 border-grid-blue/30 text-grid-blue'
+          }`}>
+            {role === 'admin' ? <Database size={13} /> : <Users size={13} />}
+            {role === 'admin' ? "Admin Console" : "Inspector Terminal"}
           </div>
 
           {/* User */}

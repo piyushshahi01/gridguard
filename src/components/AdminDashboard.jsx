@@ -12,20 +12,27 @@ import {
 } from "./common/UI";
 import { CustomTooltip } from "./common/CustomTooltip";
 import { GeospatialMap } from "./GeospatialMap";
+import { assignInspector, INSPECTORS } from "../services/dataService";
 
-export function AdminDashboard({ data, onSelect, onGenerate, onSimulate, onReset }) {
+export function AdminDashboard({ data, onSelect, onGenerate, onSimulate, onReset, onDataUpdate }) {
   const { transformers, alerts, analytics = {} } = data;
   const [filterTabs, setFilterTabs] = useState("active");
   const [chartTab, setChartTab] = useState("region");
   const [page, setPage] = useState(1);
+  const [isDispatching, setIsDispatching] = useState(false);
   const itemsPerPage = 10;
   
   const byRegion = analytics.byRegion || [];
   const byZone = analytics.byZone || [];
   const lossDistribution = analytics.lossDistribution || [];
   
-  const activeAlerts = alerts.filter(a => a.actionStatus === "open" || a.actionStatus === "assigned");
-  const resolvedAlerts = alerts.filter(a => a.actionStatus === "confirmed" || a.actionStatus === "false_alarm" || a.actionStatus === "checked");
+  const activeAlerts = alerts
+    .filter(a => a.actionStatus === "open" || a.actionStatus === "assigned")
+    .sort((a, b) => (b.theft_loss || 0) - (a.theft_loss || 0));
+    
+  const resolvedAlerts = alerts
+    .filter(a => a.actionStatus === "confirmed" || a.actionStatus === "false_alarm" || a.actionStatus === "checked")
+    .sort((a, b) => (b.theft_loss || 0) - (a.theft_loss || 0));
   
   const displayedAlerts = filterTabs === "active" ? activeAlerts : resolvedAlerts;
   
@@ -40,6 +47,26 @@ export function AdminDashboard({ data, onSelect, onGenerate, onSimulate, onReset
     supply: transformers.reduce((s, t) => s + t.timeSeries[hi].supply, 0),
     consumption: transformers.reduce((s, t) => s + t.timeSeries[hi].consumption, 0),
   })) || [];
+
+  const handleDispatchAll = async () => {
+    const unassignedCritical = activeAlerts.filter(a => a.severity === "critical" && a.actionStatus === "open");
+    if (unassignedCritical.length === 0) return;
+
+    setIsDispatching(true);
+    try {
+      // Loop through and assign to responders (rotating through the list)
+      for (let i = 0; i < unassignedCritical.length; i++) {
+        const alert = unassignedCritical[i];
+        const responderName = INSPECTORS[i % INSPECTORS.length];
+        await assignInspector(alert.id, responderName);
+      }
+      if (onDataUpdate) await onDataUpdate();
+    } catch (err) {
+      console.error("Dispatch failed:", err);
+    } finally {
+      setIsDispatching(false);
+    }
+  };
 
   return (
     <motion.div
@@ -165,7 +192,18 @@ export function AdminDashboard({ data, onSelect, onGenerate, onSimulate, onReset
         {/* alerts panel */}
         <div className="glass-card border border-border-grid rounded-xl p-5 overflow-hidden flex flex-col">
           <div className="flex justify-between items-center mb-4">
-            <SectionTitle label={filterTabs === "active" ? "Active Alerts" : "Resolved Alerts"} />
+            <div className="flex flex-col gap-1">
+              <SectionTitle label={filterTabs === "active" ? "Active Alerts" : "Resolved Alerts"} />
+              {filterTabs === "active" && activeAlerts.some(a => a.severity === "critical" && a.actionStatus === "open") && (
+                <button 
+                  onClick={handleDispatchAll}
+                  disabled={isDispatching}
+                  className="text-[10px] font-bold text-grid-red uppercase tracking-widest flex items-center gap-1 hover:underline disabled:opacity-50 cursor-pointer">
+                  {isDispatching ? <RefreshCw size={10} className="animate-spin" /> : <Play size={10} />}
+                  Dispatch All Critical to Responders
+                </button>
+              )}
+            </div>
             <div className="flex gap-1.5 bg-bg1 p-1 rounded-lg border border-border-grid/50">
               <button
                 onClick={() => setFilterTabs("active")}

@@ -42,13 +42,62 @@ let mlCacheStale = true;
 let lastRunTime = 0;
 const CACHE_TTL_MS = 5_000; // refresh every 5s
 
+// Function to bridge Python output with MongoDB Case persistence
+async function syncAndMergeAlerts(data) {
+    if (!data || !data.alerts) return data;
+
+    try {
+        // 1. Get all relevant cases from DB to merge statuses
+        const dbCases = await Case.find({ 
+            alertId: { $in: data.alerts.map(a => a.id) } 
+        });
+        const caseMap = dbCases.reduce((acc, c) => {
+            acc[c.alertId] = c;
+            return acc;
+        }, {});
+
+        // 2. Iterate and sync
+        for (let alert of data.alerts) {
+            const dbCase = caseMap[alert.id];
+
+            if (dbCase) {
+                // Merge status and assignment FROM Database TO Python Output
+                alert.actionStatus = dbCase.actionStatus;
+                alert.assignedTo = dbCase.assignedTo;
+                alert.notes = dbCase.notes;
+            } else if (alert.severity === 'critical') {
+                // If it's critical but doesn't exist, CREATE it in DB for persistence
+                try {
+                    await Case.create({
+                        alertId: alert.id,
+                        transformer: alert.transformer,
+                        location: alert.location,
+                        anomalyType: alert.type || 'theft',
+                        severity: alert.severity,
+                        riskScore: alert.risk || 80,
+                        explanation: alert.message,
+                        actionStatus: 'open'
+                    });
+                } catch (e) {
+                    // Ignore duplicate key errors if background workers race
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Alert Sync Error:", err);
+    }
+    return data;
+}
+
 async function getMLData() {
     const now = Date.now();
     if (mlCache && (now - lastRunTime) < CACHE_TTL_MS) {
         return mlCache; // instant
     }
-    // Run the model and cache result
-    const data = await runMLModel();
+    // Run the model, sync with DB, and cache result
+    let data = await runMLModel();
+    data = await syncAndMergeAlerts(data);
+    
     mlCache = data;
     lastRunTime = Date.now();
     mlCacheStale = false;
@@ -56,11 +105,17 @@ async function getMLData() {
 }
 
 // Warm up the cache immediately on server start
-runMLModel().then(d => { mlCache = d; lastRunTime = Date.now(); console.log('ML cache warmed.'); }).catch(() => {});
+runMLModel()
+    .then(d => syncAndMergeAlerts(d))
+    .then(d => { mlCache = d; lastRunTime = Date.now(); console.log('ML cache warmed.'); })
+    .catch(() => {});
 
 // Background refresh every 5s so data always appears live
 setInterval(() => {
-    runMLModel().then(d => { mlCache = d; lastRunTime = Date.now(); }).catch(() => {});
+    runMLModel()
+        .then(d => syncAndMergeAlerts(d))
+        .then(d => { mlCache = d; lastRunTime = Date.now(); })
+        .catch(() => {});
 }, CACHE_TTL_MS);
 
 // GET /data - Returns predictions from the Python Isolation Forest model for the entire dashboard
@@ -91,8 +146,10 @@ router.post('/simulate', async (req, res) => {
 router.post('/reset', async (req, res) => {
     try {
         lastRunTime = 0; // bust cache
-        const data = await getMLData();
-        res.json({ message: 'Grid data refreshed from ML model.', data });
+        const data = await runMLModel(false); // Force normal mode
+        mlCache = data;
+        lastRunTime = Date.now();
+        res.json({ message: 'Grid data refreshed. Simulation cleared.', data });
     } catch (e) {
         res.status(500).json({ error: 'ML model failed' });
     }

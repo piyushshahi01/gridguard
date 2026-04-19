@@ -78,6 +78,8 @@ export function GridMonitor({ data, onGenerate, onSimulate, onReset }) {
   const [trend, setTrend] = useState([]);
   const [tick, setTick] = useState(0);
   const [lastUpdated, setLastUpdated] = useState(0);
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Compute live totals from real ML data
   const totalSupply      = transformers.reduce((s, t) => s + t.supply, 0);
@@ -125,9 +127,18 @@ export function GridMonitor({ data, onGenerate, onSimulate, onReset }) {
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex gap-2">
-            <CtrlBtn icon={<RefreshCw size={14} />} label="Generate Data" onClick={onGenerate} colorClass="text-grid-blue" />
-            <CtrlBtn icon={<Play size={14} />} label="Simulate Theft" onClick={onSimulate} colorClass="text-grid-red" />
-            <CtrlBtn icon={<RotateCcw size={14} />} label="Refresh" onClick={onReset} colorClass="text-t2" />
+            <CtrlBtn icon={isRefreshing ? <RefreshCw size={14} className="animate-spin" /> : <RefreshCw size={14} />} 
+              label={isRefreshing ? "Syncing..." : "Generate Data"} 
+              onClick={async () => { setIsRefreshing(true); await onGenerate(); setIsRefreshing(false); }} 
+              colorClass="text-grid-blue" />
+            <CtrlBtn icon={isSimulating ? <RefreshCw size={14} className="animate-spin" /> : <Play size={14} />} 
+              label={isSimulating ? "Infecting..." : "Simulate Theft"} 
+              onClick={async () => { setIsSimulating(true); await onSimulate(); setIsSimulating(false); }} 
+              colorClass="text-grid-red" />
+            <CtrlBtn icon={<RotateCcw size={14} />} 
+              label="Reset" 
+              onClick={onReset} 
+              colorClass="text-t2" />
           </div>
           <div className="flex items-center gap-2 bg-bg2 border border-border-grid rounded-lg px-3 py-2">
             <LiveDot />

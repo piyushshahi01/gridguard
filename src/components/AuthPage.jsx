@@ -17,6 +17,19 @@ export function AuthPage({ onAuth }) {
     password: '',
   });
 
+  // Local simulation for the "Live Preview" card
+  const [previewStats, setPreviewStats] = useState({ alerts: 3, risk: 72, blocked: 147 });
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setPreviewStats(prev => ({
+        alerts: prev.alerts + (Math.random() > 0.8 ? 1 : Math.random() < 0.2 ? -1 : 0),
+        risk: Math.max(20, Math.min(98, prev.risk + (Math.random() - 0.5) * 5)),
+        blocked: prev.blocked + (Math.random() > 0.9 ? 1 : 0)
+      }));
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError('');
@@ -81,29 +94,43 @@ export function AuthPage({ onAuth }) {
             </div>
           </div>
 
-          {/* Role Toggle */}
-          <div className="flex mb-8 bg-bg1 rounded-xl border border-border-grid p-1 gap-1">
-            <button
-              onClick={() => setRole('admin')}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-[13px] font-bold uppercase tracking-widest transition-all duration-300 cursor-pointer ${
-                role === 'admin'
-                  ? 'bg-gradient-to-r from-grid-green/20 to-grid-cyan/10 text-grid-green border border-grid-green/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
-                  : 'text-t3 hover:text-t2'
-              }`}
-            >
-              <Shield size={16} /> Admin
-            </button>
-            <button
-              onClick={() => setRole('inspector')}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-[13px] font-bold uppercase tracking-widest transition-all duration-300 cursor-pointer ${
-                role === 'inspector'
-                  ? 'bg-gradient-to-r from-grid-blue/20 to-grid-cyan/10 text-grid-blue border border-grid-blue/30 shadow-[0_0_15px_rgba(56,189,248,0.1)]'
-                  : 'text-t3 hover:text-t2'
-              }`}
-            >
-              <ShieldCheck size={16} /> Inspector
-            </button>
-          </div>
+          {/* Role Selection (SignUp only) */}
+          <AnimatePresence>
+            {mode === 'signup' && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mb-8"
+              >
+                <label className="text-[12px] text-t2 font-bold uppercase tracking-widest mb-3 block">Select Your Role</label>
+                <div className="flex bg-bg1 rounded-xl border border-border-grid p-1 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setRole('admin')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-[13px] font-bold uppercase tracking-widest transition-all duration-300 cursor-pointer ${
+                      role === 'admin'
+                        ? 'bg-gradient-to-r from-grid-green/20 to-grid-cyan/10 text-grid-green border border-grid-green/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
+                        : 'text-t3 hover:text-t2'
+                    }`}
+                  >
+                    <Shield size={16} /> Admin
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRole('inspector')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-[13px] font-bold uppercase tracking-widest transition-all duration-300 cursor-pointer ${
+                      role === 'inspector'
+                        ? 'bg-gradient-to-r from-grid-blue/20 to-grid-cyan/10 text-grid-blue border border-grid-blue/30 shadow-[0_0_15px_rgba(56,189,248,0.1)]'
+                        : 'text-t3 hover:text-t2'
+                    }`}
+                  >
+                    <ShieldCheck size={16} /> Inspector
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Heading */}
           <AnimatePresence mode="wait">
@@ -309,19 +336,20 @@ export function AuthPage({ onAuth }) {
             <div className="grid grid-cols-3 gap-3 px-5 py-3">
               {[
                 { label: 'Transformers', value: '8', color: 'text-grid-cyan' },
-                { label: 'Active Alerts', value: '3', color: 'text-grid-red' },
-                { label: 'Risk Score', value: '72%', color: 'text-grid-amber' },
+                { label: 'Active Alerts', value: Math.max(0, Math.round(previewStats.alerts)), color: 'text-grid-red' },
+                { label: 'Risk Score', value: `${Math.round(previewStats.risk)}%`, color: 'text-grid-amber' },
               ].map((s, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 + i * 0.15 }}
-                  className="bg-bg2 border border-border-grid rounded-lg p-3"
-                >
+                <div key={i} className="bg-bg2 border border-border-grid rounded-lg p-3">
                   <div className="text-[9px] text-t3 font-bold uppercase tracking-widest">{s.label}</div>
-                  <div className={`text-xl font-bold font-chakra ${s.color} mt-1`}>{s.value}</div>
-                </motion.div>
+                  <motion.div 
+                    key={s.value}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`text-xl font-bold font-chakra ${s.color} mt-1`}
+                  >
+                    {s.value}
+                  </motion.div>
+                </div>
               ))}
             </div>
 
@@ -339,25 +367,31 @@ export function AuthPage({ onAuth }) {
                   <line x1="0" y1="20" x2="400" y2="20" stroke="#e2e8f0" strokeWidth="1" />
                   <line x1="0" y1="40" x2="400" y2="40" stroke="#e2e8f0" strokeWidth="1" />
                   <line x1="0" y1="60" x2="400" y2="60" stroke="#e2e8f0" strokeWidth="1" />
-                  {/* Supply (green) */}
+                  {/* Supply (green) - Added breathing animation */}
                   <motion.path
                     d="M 0 60 Q 50 55, 100 45 Q 150 35, 200 25 Q 250 20, 300 30 Q 350 35, 400 40"
                     fill="none"
                     stroke="#10b981"
                     strokeWidth="2.5"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 1.5, delay: 1 }}
+                    animate={{ d: [
+                      "M 0 60 Q 50 55, 100 45 Q 150 35, 200 25 Q 250 20, 300 30 Q 350 35, 400 40",
+                      "M 0 58 Q 50 53, 100 47 Q 150 37, 200 23 Q 250 18, 300 32 Q 350 37, 400 38",
+                      "M 0 60 Q 50 55, 100 45 Q 150 35, 200 25 Q 250 20, 300 30 Q 350 35, 400 40"
+                    ]}}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                   />
-                  {/* Consumption (red with anomaly spike) */}
+                  {/* Consumption (red) - Added jagged wiggle */}
                   <motion.path
                     d="M 0 65 Q 50 60, 100 50 Q 150 42, 200 35 Q 230 75, 260 30 Q 300 40, 350 45 Q 375 48, 400 50"
                     fill="none"
                     stroke="#ef4444"
                     strokeWidth="2.5"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 1.5, delay: 1.2 }}
+                    animate={{ d: [
+                      "M 0 65 Q 50 60, 100 50 Q 150 42, 200 35 Q 230 75, 260 30 Q 300 40, 350 45 Q 375 48, 400 50",
+                      "M 0 67 Q 50 62, 100 52 Q 150 44, 200 37 Q 230 78, 260 32 Q 300 42, 350 47 Q 375 50, 400 52",
+                      "M 0 65 Q 50 60, 100 50 Q 150 42, 200 35 Q 230 75, 260 30 Q 300 40, 350 45 Q 375 48, 400 50"
+                    ]}}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   />
                   {/* Anomaly highlight zone */}
                   <motion.rect
@@ -366,9 +400,8 @@ export function AuthPage({ onAuth }) {
                     stroke="#ef444430"
                     strokeWidth="1"
                     strokeDasharray="4 2"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0, 1, 0.5, 1] }}
-                    transition={{ duration: 2, delay: 2, repeat: Infinity }}
+                    animate={{ opacity: [0, 1, 0.5, 1], scale: [1, 1.02, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
                   />
                 </svg>
               </motion.div>
@@ -416,7 +449,14 @@ export function AuthPage({ onAuth }) {
             className="absolute -bottom-4 -left-6 bg-bg2/90 border border-border-grid p-3 rounded-xl shadow-2xl backdrop-blur-md"
           >
             <div className="text-[9px] text-t3 font-bold uppercase tracking-widest">Threats Blocked</div>
-            <div className="text-grid-red font-bold font-chakra text-lg mt-0.5">147</div>
+            <motion.div 
+              key={previewStats.blocked}
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              className="text-grid-red font-bold font-chakra text-lg mt-0.5"
+            >
+              {previewStats.blocked}
+            </motion.div>
           </motion.div>
         </motion.div>
       </div>

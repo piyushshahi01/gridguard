@@ -13,7 +13,7 @@ import { CustomTooltip } from "./common/CustomTooltip";
 import { updateActionStatus } from "../services/dataService";
 import { motion } from "framer-motion";
 
-export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
+export function InspectorDashboard({ data, inspectorName, onDataUpdate, sideTab, setSideTab }) {
   const { transformers, alerts: rawAlerts } = data;
   
   // ─── LOCAL STATE for real-time optimistic updates ───────────────────────
@@ -25,27 +25,23 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
   const [lastUpdated, setLastUpdated] = useState(0);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [statusFlash, setStatusFlash] = useState(null); // for animation
+  const [activeTab, setActiveTab] = useState('alerts'); // 'alerts' | 'reports'
   
   // Sync from props → local state when server data arrives
   useEffect(() => {
-    const cases = rawAlerts.length > 0 
-      ? rawAlerts.map(a => ({ ...a }))
-      : transformers.filter(t => t.status !== "safe").map((t, i) => ({
-          id: `CASE-${i}`,
-          transformer: t.id,
-          location: t.location,
-          severity: t.status,
-          risk: t.risk,
-          message: `${t.status === 'critical' ? 'CRITICAL' : 'WARNING'} — Loss anomaly detected.`,
-          time: t.updatedAt,
-          explanation: t.explanation,
-          actionStatus: "open",
-          assignedTo: inspectorName,
-          notes: ""
-        }));
+    // 1. Show alerts assigned to THIS inspector + Unassigned open alerts
+    const myCases = rawAlerts.filter(a => 
+      a.assignedTo === inspectorName || 
+      a.assignedTo === "Unassigned" || 
+      !a.assignedTo
+    );
+    
+    // 2. Map to local structure
+    const cases = myCases.map(a => ({ ...a }));
+    
     setLocalAlerts(cases);
     if(!selectedId && cases.length > 0) setSelectedId(cases[0].id);
-  }, [rawAlerts, transformers]);
+  }, [rawAlerts, transformers, inspectorName]);
 
   // Live timer
   useEffect(() => {
@@ -56,9 +52,32 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
   // Reset timer when new data arrives from server
   useEffect(() => { setLastUpdated(0); }, [data]);
 
+  // Sync from Global Sidebar (sideTab) to Local Tab (activeTab)
+  useEffect(() => {
+    if (sideTab === 'reports') setActiveTab('reports');
+    else if (sideTab === 'dashboard') setActiveTab('alerts');
+  }, [sideTab]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (setSideTab) {
+      setSideTab(tab === 'alerts' ? 'dashboard' : 'reports');
+    }
+  };
+
   const activeId = selectedId || (localAlerts.length > 0 ? localAlerts[0].id : null);
   const selected = localAlerts.find(a => a.id === activeId);
   const tx = selected ? transformers.find(t => t.id === selected.transformer) : null;
+
+  // Filter localAlerts based on activeTab and severity filter
+  const items = activeTab === 'alerts' 
+    ? localAlerts.filter(a => a.actionStatus !== 'confirmed' && a.actionStatus !== 'false_alarm')
+    : localAlerts.filter(a => a.actionStatus === 'confirmed' || a.actionStatus === 'false_alarm');
+
+  const filtered = items.filter(a => {
+    if (filter === "all") return true;
+    return a.severity === filter;
+  });
 
   // ─── REAL-TIME STATUS UPDATE ────────────────────────────────────────────
   const handleStatusUpdate = async (status) => {
@@ -95,8 +114,6 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
     }
   };
 
-  const filtered = filter === "all" ? localAlerts : localAlerts.filter(a => a.severity === filter);
-
   // ─── LIVE STATS (computed from local state) ────────────────────────────
   const activeList = localAlerts.filter(a => a.actionStatus === "open" || a.actionStatus === "assigned");
   const totalCases = activeList.length;
@@ -118,6 +135,38 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* ─── Header ─────────────────────────────────────────────────── */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[10px] text-grid-blue font-bold tracking-[0.2em] uppercase">Investigator Terminal</span>
+            <Badge label="Enforcement Active" color="bg-grid-blue/10 text-grid-blue" />
+          </div>
+          <h1 className="text-3xl font-extrabold text-t1 font-chakra tracking-tight">
+            Terminal: <span className="text-blue-600">{inspectorName}</span>
+          </h1>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <div className="flex bg-bg1 p-1 rounded-xl border border-border-grid shadow-inner">
+            <button 
+              onClick={() => handleTabChange('alerts')}
+              className={`px-6 py-2 rounded-lg text-[12px] font-bold uppercase tracking-widest transition-all duration-300 cursor-pointer ${
+                activeTab === 'alerts' ? "bg-white text-blue-600 shadow-md translate-y-[-1px]" : "text-t3 hover:text-t2"
+              }`}>
+              Active Alerts
+            </button>
+            <button 
+              onClick={() => handleTabChange('reports')}
+              className={`px-6 py-2 rounded-lg text-[12px] font-bold uppercase tracking-widest transition-all duration-300 cursor-pointer ${
+                activeTab === 'reports' ? "bg-white text-blue-600 shadow-md translate-y-[-1px]" : "text-t3 hover:text-t2"
+              }`}>
+              Case Reports
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* ─── Top Stats Bar ─────────────────────────────────────────────── */}
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex gap-4 flex-1 flex-wrap">
@@ -185,8 +234,8 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
         <div className="bg-bg2 border border-border-grid rounded-xl overflow-hidden flex flex-col h-full">
           <div className="p-4 border-b border-border-grid">
             <div className="flex items-center justify-between mb-4">
-              <SectionTitle label="Investigation Queue" />
-              <span className="text-[10px] text-grid-blue font-bold bg-grid-blue/10 border border-grid-blue/20 px-2 py-1 rounded-md">{filtered.length} Cases</span>
+              <SectionTitle label={activeTab === 'alerts' ? "Investigation Queue" : "Resolved Reports"} />
+              <span className="text-[10px] text-grid-blue font-bold bg-grid-blue/10 border border-grid-blue/20 px-2 py-1 rounded-md">{filtered.length} Items</span>
             </div>
             <div className="flex gap-1.5 bg-bg1 p-1 rounded-lg border border-border-grid/50">
               {["all", "critical", "warning"].map(f => (
@@ -231,8 +280,8 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
                   <div className="flex items-center gap-1 text-[10px] text-t3">
                     <Clock size={9} /> {a.time || a.timestamp || 'Just Now'}
                   </div>
-                  <div className={`text-[12px] font-bold font-chakra ${a.risk >= 60 ? 'text-grid-red' : a.risk >= 28 ? 'text-grid-amber' : 'text-grid-green'}`}>
-                    {a.risk}% Risk
+                  <div className={`text-[12px] font-bold font-chakra ${ (a.riskScore || a.risk) >= 60 ? 'text-grid-red' : (a.riskScore || a.risk) >= 28 ? 'text-grid-amber' : 'text-grid-green'}`}>
+                    {Math.round(a.riskScore || a.risk || 0)}% Risk
                   </div>
                 </div>
               </div>
@@ -243,6 +292,26 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
         {/* ─── Right Panel — Investigation Detail ─────────────────────── */}
         {selected && tx ? (
           <div className="flex flex-col gap-4 overflow-y-auto pr-1">
+            {activeTab === 'reports' && (
+              <div className="bg-grid-green/5 border border-grid-green/20 rounded-2xl p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3 text-grid-green">
+                  <CheckCircle size={20} />
+                  <div>
+                    <div className="text-[14px] font-bold uppercase tracking-widest">Case Resolved</div>
+                    <div className="text-[12px] opacity-80 flex items-center gap-2 mt-1">
+                      <span className="px-1.5 py-0.5 rounded bg-grid-green/10 font-bold border border-grid-green/20">
+                        {selected.risk}% Mitigation
+                      </span>
+                      • Final report synced to HQ
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[10px] text-t3 uppercase font-bold">Revenue Recovered</div>
+                  <div className="text-xl font-bold font-chakra text-grid-green">₹{(tx.theft_kwh * 8.5).toLocaleString()}</div>
+                </div>
+              </div>
+            )}
             {/* Case Header */}
             <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
               <div className="flex items-start justify-between flex-wrap gap-4">
@@ -262,11 +331,11 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
                 <div className="flex items-center gap-3">
                   <Badge status={selected.severity} label={selected.severity === "critical" ? "CRITICAL" : "WARNING"} className="px-4 py-1.5" />
                   <div className={`px-5 py-2.5 rounded-2xl border font-bold text-xl flex flex-col items-center ${
-                    selected.risk >= 60 ? 'text-red-600 bg-red-50 border-red-100' :
-                    selected.risk >= 28 ? 'text-amber-600 bg-amber-50 border-amber-100' :
+                    (selected.riskScore || selected.risk) >= 60 ? 'text-red-600 bg-red-50 border-red-100' :
+                    (selected.riskScore || selected.risk) >= 28 ? 'text-amber-600 bg-amber-50 border-amber-100' :
                     'text-emerald-600 bg-emerald-50 border-emerald-100'
                   }`}>
-                    {selected.risk}%
+                    {Math.round(selected.riskScore || selected.risk || 0)}%
                     <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Risk Score</div>
                   </div>
                 </div>
@@ -323,12 +392,14 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
                 <div className="bg-bg0/50 border border-border-grid/50 px-3 py-2 rounded-lg">
                   <div className="text-[9px] text-t3 uppercase font-bold tracking-widest">Unaccounted Loss</div>
                   <div className="text-grid-amber font-bold font-chakra">
-                    {Math.max(...tx.timeSeries.map(d => Math.abs(d.supply - d.consumption)))} kWh
+                    {Math.round(Math.max(...tx.timeSeries.map(d => Math.abs(d.supply - d.consumption))))} kWh
                   </div>
                 </div>
                 <div className="bg-bg0/50 border border-border-grid/50 px-3 py-2 rounded-lg">
                   <div className="text-[9px] text-t3 uppercase font-bold tracking-widest">Deviation</div>
-                  <div className={`font-bold font-chakra ${selected.deviation > 5 ? 'text-grid-red' : 'text-grid-amber'}`}>{selected.deviation}%</div>
+                  <div className={`font-bold font-chakra ${selected.deviation > 5 ? 'text-grid-red' : 'text-grid-amber'}`}>
+                    {Math.round(selected.deviation || 0)}%
+                  </div>
                 </div>
               </div>
             </div>
