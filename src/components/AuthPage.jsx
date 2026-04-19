@@ -57,9 +57,9 @@ export function AuthPage({ onAuth }) {
     <div className="min-h-screen bg-bg0 flex overflow-hidden relative font-jetbrains">
       {/* Animated grid background */}
       <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e2d4520_1px,transparent_1px),linear-gradient(to_bottom,#1e2d4520_1px,transparent_1px)] bg-[size:3rem_3rem]" />
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_80%_50%_at_20%_40%,rgba(16,185,129,0.08),transparent)]" />
-        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_60%_40%_at_80%_20%,rgba(56,189,248,0.05),transparent)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f080_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f080_1px,transparent_1px)] bg-[size:3rem_3rem] animate-grid-move" />
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_80%_50%_at_20%_40%,rgba(37,99,235,0.05),transparent)]" />
+        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_60%_40%_at_80%_20%,rgba(56,189,248,0.03),transparent)]" />
       </div>
 
       {/* Left Panel — Auth Form */}
@@ -72,12 +72,12 @@ export function AuthPage({ onAuth }) {
         >
           {/* Logo */}
           <div className="flex items-center gap-3 mb-10">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-grid-green to-grid-cyan flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.3)]">
-              <Zap size={24} className="text-bg0 fill-bg0" />
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
+              <Zap size={24} className="text-white fill-white" />
             </div>
             <div>
-              <div className="text-[18px] font-bold text-t1 font-chakra tracking-tight uppercase leading-none">GRIDGUARD</div>
-              <div className="text-[10px] text-grid-green font-bold tracking-[0.2em] uppercase">AI Security Platform</div>
+              <div className="text-[20px] font-extrabold text-t1 tracking-tight uppercase leading-none">GRIDGUARD</div>
+              <div className="text-[10px] text-blue-600 font-bold tracking-[0.2em] uppercase">AI Security Platform</div>
             </div>
           </div>
 
@@ -181,7 +181,7 @@ export function AuthPage({ onAuth }) {
                   value={form.email}
                   onChange={handleChange}
                   placeholder="Enter your email"
-                  className="w-full bg-bg1 border border-border-grid rounded-xl pl-12 pr-4 py-3.5 text-[14px] text-t1 placeholder:text-t3/50 focus:outline-none focus:border-grid-green/50 focus:shadow-[0_0_15px_rgba(16,185,129,0.08)] transition-all duration-300"
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-4 py-3.5 text-[14px] text-t1 placeholder:text-slate-400 focus:outline-none focus:border-blue-500/50 shadow-sm transition-all duration-300"
                   required
                 />
               </div>
@@ -198,7 +198,7 @@ export function AuthPage({ onAuth }) {
                   value={form.password}
                   onChange={handleChange}
                   placeholder="Enter password"
-                  className="w-full bg-bg1 border border-border-grid rounded-xl pl-12 pr-12 py-3.5 text-[14px] text-t1 placeholder:text-t3/50 focus:outline-none focus:border-grid-green/50 focus:shadow-[0_0_15px_rgba(16,185,129,0.08)] transition-all duration-300"
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-12 py-3.5 text-[14px] text-t1 placeholder:text-slate-400 focus:outline-none focus:border-blue-500/50 shadow-sm transition-all duration-300"
                   required
                   minLength={6}
                 />
@@ -231,10 +231,10 @@ export function AuthPage({ onAuth }) {
               disabled={loading}
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.98 }}
-              className={`w-full py-4 rounded-xl text-[14px] font-bold uppercase tracking-widest flex items-center justify-center gap-3 transition-all duration-300 shadow-2xl cursor-pointer disabled:opacity-50 ${
+              className={`w-full py-4 rounded-xl text-[14px] font-bold uppercase tracking-widest flex items-center justify-center gap-3 transition-all duration-300 shadow-[0_10px_30px_-10px_rgba(37,99,235,0.3)] cursor-pointer disabled:opacity-50 ${
                 role === 'admin'
-                  ? 'bg-gradient-to-r from-grid-green to-emerald-500 text-bg0 shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:shadow-[0_0_40px_rgba(16,185,129,0.4)]'
-                  : 'bg-gradient-to-r from-grid-blue to-cyan-400 text-bg0 shadow-[0_0_30px_rgba(56,189,248,0.3)] hover:shadow-[0_0_40px_rgba(56,189,248,0.4)]'
+                  ? 'bg-slate-900 text-white hover:bg-slate-800'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             >
               {loading ? (
@@ -284,12 +284,12 @@ export function AuthPage({ onAuth }) {
           }`} />
 
           {/* Mock Dashboard Card */}
-          <div className="relative bg-bg1/80 backdrop-blur-xl border border-border-grid rounded-2xl overflow-hidden shadow-2xl">
+          <div className="relative bg-white border border-slate-200 rounded-[2rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] overflow-hidden">
             {/* Title bar */}
             <div className="flex items-center justify-between px-5 py-3 border-b border-border-grid bg-bg2/50">
               <div className="flex items-center gap-2">
-                <Zap size={14} className={role === 'admin' ? 'text-grid-green' : 'text-grid-blue'} />
-                <span className="text-[12px] font-chakra font-bold text-t2 uppercase">GridGuard</span>
+                <Zap size={14} className="text-blue-600" />
+                <span className="text-[12px] font-chakra font-bold text-slate-400 uppercase">GridGuard App</span>
               </div>
               <div className="flex gap-1.5">
                 <span className="w-3 h-3 rounded-full bg-grid-red/60" />
@@ -331,14 +331,14 @@ export function AuthPage({ onAuth }) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8 }}
-                className="bg-bg2 border border-border-grid rounded-lg p-4 h-[140px] relative overflow-hidden"
+                className="bg-slate-50 border border-slate-100 rounded-lg p-4 h-[140px] relative overflow-hidden"
               >
-                <div className="text-[9px] text-t3 font-bold uppercase tracking-widest mb-3">Supply vs. Consumption</div>
+                <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-3">Supply vs. Consumption</div>
                 <svg viewBox="0 0 400 80" className="w-full h-[80px]">
                   {/* Grid lines */}
-                  <line x1="0" y1="20" x2="400" y2="20" stroke="#1e2d4540" strokeWidth="1" />
-                  <line x1="0" y1="40" x2="400" y2="40" stroke="#1e2d4540" strokeWidth="1" />
-                  <line x1="0" y1="60" x2="400" y2="60" stroke="#1e2d4540" strokeWidth="1" />
+                  <line x1="0" y1="20" x2="400" y2="20" stroke="#e2e8f0" strokeWidth="1" />
+                  <line x1="0" y1="40" x2="400" y2="40" stroke="#e2e8f0" strokeWidth="1" />
+                  <line x1="0" y1="60" x2="400" y2="60" stroke="#e2e8f0" strokeWidth="1" />
                   {/* Supply (green) */}
                   <motion.path
                     d="M 0 60 Q 50 55, 100 45 Q 150 35, 200 25 Q 250 20, 300 30 Q 350 35, 400 40"
