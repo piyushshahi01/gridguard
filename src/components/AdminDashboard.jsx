@@ -107,11 +107,11 @@ export function AdminDashboard({ data, onSelect, onGenerate, onSimulate, onReset
             <ResponsiveContainer width="100%" height="100%">
               {chartTab === "region" ? (
                 <BarChart data={byRegion} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e2d45" vertical={false} />
-                  <XAxis dataKey="region" tick={{ fontSize: 10, fill: "#4b6080" }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: "#4b6080" }} tickLine={false} axisLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis dataKey="region" tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false} />
                   <Tooltip
-                    contentStyle={{ background: "#0d1b2a", border: "1px solid #1e2d45", borderRadius: 8, fontSize: 12 }}
+                    contentStyle={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 12, fontSize: 12, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)" }}
                     formatter={(val, name) => [`${val.toLocaleString()} kWh`, name]}
                   />
                   <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
@@ -120,11 +120,11 @@ export function AdminDashboard({ data, onSelect, onGenerate, onSimulate, onReset
                 </BarChart>
               ) : chartTab === "zone" ? (
                 <BarChart data={byZone} layout="vertical" margin={{ top: 4, right: 16, left: 60, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e2d45" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 10, fill: "#4b6080" }} tickLine={false} axisLine={false} />
-                  <YAxis type="category" dataKey="zone" tick={{ fontSize: 9, fill: "#4b6080" }} tickLine={false} axisLine={false} width={60} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false} />
+                  <YAxis type="category" dataKey="zone" tick={{ fontSize: 9, fill: "#475569" }} tickLine={false} axisLine={false} width={60} />
                   <Tooltip
-                    contentStyle={{ background: "#0d1b2a", border: "1px solid #1e2d45", borderRadius: 8, fontSize: 12 }}
+                    contentStyle={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 12, fontSize: 12, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)" }}
                     formatter={(val, name) => [`${val.toLocaleString()} kWh`, name]}
                   />
                   <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
@@ -133,11 +133,11 @@ export function AdminDashboard({ data, onSelect, onGenerate, onSimulate, onReset
                 </BarChart>
               ) : (
                 <BarChart data={lossDistribution} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e2d45" vertical={false} />
-                  <XAxis dataKey="range" tick={{ fontSize: 10, fill: "#4b6080" }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: "#4b6080" }} tickLine={false} axisLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis dataKey="range" tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false} />
                   <Tooltip
-                    contentStyle={{ background: "#0d1b2a", border: "1px solid #1e2d45", borderRadius: 8, fontSize: 12 }}
+                    contentStyle={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 12, fontSize: 12, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)" }}
                     formatter={(val, name) => [val, name]}
                   />
                   <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
@@ -196,8 +196,8 @@ export function AdminDashboard({ data, onSelect, onGenerate, onSimulate, onReset
                   transition={{ delay: i * 0.05, duration: 0.3 }}
                   onClick={() => onSelect(transformers.find(t => t.id === a.transformer))}
                   className={`
-                    bg-bg0/60 backdrop-blur-md border rounded-lg p-3 cursor-pointer transition-all hover:bg-bg3 hover:border-opacity-60
-                    ${a.severity === 'critical' ? 'border-grid-red/20 border-l-grid-red border-l-4' : 'border-grid-amber/20 border-l-grid-amber border-l-4'}
+                    bg-white border rounded-xl p-4 cursor-pointer transition-all hover:-translate-y-1 hover:shadow-lg
+                    ${a.severity === 'critical' ? 'border-l-red-500 border-l-[3px] border-red-100' : 'border-l-amber-500 border-l-[3px] border-slate-100 shadow-sm'}
                   `}>
                   <div className="flex justify-between mb-1.5">
                     <span className={`text-[11px] font-bold tracking-widest ${statusColor(a.severity)} uppercase`}>
@@ -226,7 +226,7 @@ export function AdminDashboard({ data, onSelect, onGenerate, onSimulate, onReset
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[12px] border-collapse">
               <thead>
-                <tr className="bg-bg3/50 text-t3 uppercase tracking-wider font-semibold border-b border-border-grid">
+                <tr className="bg-slate-50/50 text-slate-500 uppercase tracking-wider font-bold border-b border-slate-100">
                   <th className="p-3.5 pl-5">ID</th>
                   <th className="p-3.5">Location</th>
                   <th className="p-3.5">Supply (kWh)</th>

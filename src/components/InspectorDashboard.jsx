@@ -112,27 +112,35 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
   };
 
   const actionStatusBg = {
-    open: "bg-bg2", assigned: "bg-grid-blue/10", in_progress: "bg-grid-cyan/10", checked: "bg-grid-amber/10", confirmed: "bg-grid-red/10", false_alarm: "bg-grid-green/10",
+    open: "bg-slate-50", assigned: "bg-blue-50/50", in_progress: "bg-cyan-50/50", checked: "bg-amber-50/50", confirmed: "bg-red-50/50", false_alarm: "bg-emerald-50/50",
   };
 
   return (
     <div className="flex flex-col gap-4">
       {/* ─── Top Stats Bar ─────────────────────────────────────────────── */}
       <div className="flex items-center gap-4 flex-wrap">
-        <div className="flex gap-3 flex-1 flex-wrap">
+        <div className="flex gap-4 flex-1 flex-wrap">
           {[
-            { icon: Activity, label: "Active Cases", value: totalCases, color: "text-grid-blue", bg: "bg-grid-blue/10", border: "border-grid-blue/20" },
-            { icon: AlertTriangle, label: "Critical", value: criticalCases, color: "text-grid-red", bg: "bg-grid-red/10", border: "border-grid-red/20" },
-            { icon: TrendingUp, label: "In Progress", value: inProgressCases, color: "text-grid-amber", bg: "bg-grid-amber/10", border: "border-grid-amber/20" },
-            { icon: CheckCircle, label: "Resolved", value: resolvedCases, color: "text-grid-green", bg: "bg-grid-green/10", border: "border-grid-green/20" },
+            { icon: Activity, label: "Active Cases", value: totalCases, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100" },
+            { icon: AlertTriangle, label: "Critical", value: criticalCases, color: "text-red-600", bg: "bg-red-50", border: "border-red-100" },
+            { icon: TrendingUp, label: "In Progress", value: inProgressCases, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
+            { icon: CheckCircle, label: "Resolved", value: resolvedCases, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
           ].map((s, i) => (
-            <div key={i} className={`flex items-center gap-3 ${s.bg} border ${s.border} rounded-xl px-4 py-3 min-w-[140px] transition-all duration-500`}>
-              <s.icon size={18} className={s.color} />
-              <div>
-                <div className="text-[10px] text-t3 font-bold uppercase tracking-widest">{s.label}</div>
-                <div className={`text-xl font-bold font-chakra ${s.color} transition-all duration-300`}>{s.value}</div>
+            <motion.div 
+              key={i} 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className={`flex items-center gap-4 ${s.bg} border ${s.border} rounded-2xl px-5 py-4 min-w-[160px] shadow-sm hover:shadow-md transition-all duration-300`}
+            >
+              <div className={`p-2 rounded-lg ${s.bg} border-b border-white/50 shadow-inner`}>
+                <s.icon size={20} className={s.color} />
               </div>
-            </div>
+              <div>
+                <div className="text-[11px] text-slate-500 font-bold uppercase tracking-widest">{s.label}</div>
+                <div className={`text-2xl font-extrabold tracking-tight ${s.color}`}>{s.value}</div>
+              </div>
+            </motion.div>
           ))}
         </div>
 
@@ -199,11 +207,11 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
                 key={a.id}
                 onClick={() => { setSelectedId(a.id); setNoteText(a.notes || ""); }}
                 className={`
-                  p-3.5 rounded-lg border cursor-pointer transition-all duration-300 border-l-4 group
+                  p-4 rounded-xl border-l-[3px] border-y border-r cursor-pointer transition-all duration-300 group
                   ${activeId === a.id
-                    ? "bg-bg3 border-border-grid/50 shadow-md"
-                    : "bg-transparent border-transparent hover:bg-bg3/40"}
-                  ${a.severity === 'critical' ? 'border-l-grid-red' : 'border-l-grid-amber'}
+                    ? "bg-white border-blue-200 shadow-lg -translate-x-1"
+                    : "bg-transparent border-transparent hover:bg-slate-50"}
+                  ${a.severity === 'critical' ? 'border-l-red-500' : 'border-l-amber-500'}
                 `}>
                 <div className="flex justify-between items-start mb-1.5">
                   <span className={`text-[11px] font-bold tracking-widest uppercase ${statusColor(a.severity)}`}>
@@ -235,7 +243,7 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
         {selected && tx ? (
           <div className="flex flex-col gap-4 overflow-y-auto pr-1">
             {/* Case Header */}
-            <div className="bg-bg2 border border-border-grid rounded-xl p-5">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
               <div className="flex items-start justify-between flex-wrap gap-4">
                 <div>
                   <div className="text-xl font-bold text-t1 font-chakra flex items-center gap-3">
@@ -252,13 +260,13 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
                 </div>
                 <div className="flex items-center gap-3">
                   <Badge status={selected.severity} label={selected.severity === "critical" ? "CRITICAL" : "WARNING"} className="px-4 py-1.5" />
-                  <div className={`px-4 py-2 rounded-xl border font-chakra font-bold text-lg ${
-                    selected.risk >= 60 ? 'text-grid-red bg-grid-red/5 border-grid-red/20' :
-                    selected.risk >= 28 ? 'text-grid-amber bg-grid-amber/5 border-grid-amber/20' :
-                    'text-grid-green bg-grid-green/5 border-grid-green/20'
+                  <div className={`px-5 py-2.5 rounded-2xl border font-bold text-xl flex flex-col items-center ${
+                    selected.risk >= 60 ? 'text-red-600 bg-red-50 border-red-100' :
+                    selected.risk >= 28 ? 'text-amber-600 bg-amber-50 border-amber-100' :
+                    'text-emerald-600 bg-emerald-50 border-emerald-100'
                   }`}>
                     {selected.risk}%
-                    <div className="text-[9px] text-t3 font-normal uppercase tracking-widest">Risk Score</div>
+                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Risk Score</div>
                   </div>
                 </div>
               </div>
@@ -414,20 +422,24 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
                 <button
                   onClick={() => handleStatusUpdate(selected.actionStatus || "checked")}
                   disabled={isUpdating}
-                  className="bg-grid-blue hover:bg-grid-cyan text-bg0 font-bold px-6 py-2.5 rounded-lg text-[13px] flex items-center gap-2 transition-all shadow-lg active:scale-95 disabled:opacity-50 cursor-pointer"
+                  className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-3 rounded-xl text-[14px] flex items-center gap-2 transition-all shadow-lg active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
-                  <FileText size={14} /> {isUpdating ? "Saving..." : "Submit Report"}
+                  <FileText size={16} /> {isUpdating ? "Saving..." : "Submit Report"}
                 </button>
                 <button
                   onClick={() => setNoteText("")}
-                  className="px-5 py-2.5 rounded-lg text-[13px] text-t3 hover:text-t2 border border-border-grid hover:bg-bg3 transition-all cursor-pointer"
+                  className="px-6 py-3 rounded-xl text-[14px] text-slate-500 font-bold hover:text-slate-900 border border-slate-200 bg-white hover:bg-slate-50 transition-all cursor-pointer"
                 >
-                  Clear
+                  Clear Form
                 </button>
                 {submitSuccess && (
-                  <span className="text-grid-green text-[12px] font-bold flex items-center gap-1 animate-pulse">
-                    <CheckCircle size={14} /> Report Saved Successfully
-                  </span>
+                  <motion.span 
+                    initial={{ opacity: 0, x: -10 }} 
+                    animate={{ opacity: 1, x: 0 }}
+                    className="text-emerald-600 text-[13px] font-bold flex items-center gap-2"
+                  >
+                    <CheckCircle size={16} /> Report Published
+                  </motion.span>
                 )}
               </div>
             </div>

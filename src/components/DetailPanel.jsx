@@ -42,9 +42,9 @@ export function DetailPanel({ transformer: t, onBack, onDataUpdate, alerts }) {
       <div className="flex items-center gap-4 py-2 flex-wrap">
         <button 
           onClick={onBack} 
-          className="glass border border-border-grid rounded-lg px-4 py-2.5 text-t2 hover:text-t1 hover:border-border-hov transition-all flex items-center gap-2 text-[13px] font-medium cursor-pointer box-glow"
+          className="bg-white border border-slate-200 rounded-xl px-5 py-2.5 text-slate-500 hover:text-slate-900 hover:border-slate-400 transition-all flex items-center gap-2 text-[13px] font-bold cursor-pointer shadow-sm hover:shadow-md"
         >
-          <ArrowLeft size={16} /> Back to Dashboard
+          <ArrowLeft size={18} /> Back to Overview
         </button>
         <div className="flex-1 min-w-[200px]">
           <div className="text-2xl font-bold text-t1 font-chakra tracking-tight">
@@ -95,9 +95,9 @@ export function DetailPanel({ transformer: t, onBack, onDataUpdate, alerts }) {
                     <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e2d45" vertical={false} />
-                <XAxis dataKey="time" tick={{ fontSize: 10, fill: "#4b6080" }} tickLine={false} axisLine={false} interval={5} />
-                <YAxis tick={{ fontSize: 10, fill: "#4b6080" }} tickLine={false} axisLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <XAxis dataKey="time" tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false} interval={5} />
+                <YAxis tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomTooltip />} />
                 {t.consumption > t.supply && (
                   <ReferenceLine y={t.supply} stroke="#f59e0b" strokeDasharray="5 5"

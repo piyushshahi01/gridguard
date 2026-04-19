@@ -27,9 +27,9 @@ const getHex = (colorClass) => {
 
 export function Badge({ status, label, className }) {
   const colors = {
-    critical: { bg: 'rgba(239,68,68,0.1)',  border: 'rgba(239,68,68,0.3)',  text: '#ef4444' },
-    warning:  { bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)', text: '#f59e0b' },
-    safe:     { bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.3)', text: '#10b981' },
+    critical: { bg: '#fef2f2', border: '#fee2e2', text: '#dc2626' },
+    warning:  { bg: '#fffbeb', border: '#fef3c7', text: '#d97706' },
+    safe:     { bg: '#f0fdf4', border: '#dcfce7', text: '#16a34a' },
   };
   const c = colors[status] || colors.safe;
   return (
@@ -54,20 +54,20 @@ export function MetricCard({ icon: Icon, label, value, sub, colorClass = "text-g
         boxShadow: `0 4px 20px -5px ${hex}15, 0 0 3px rgba(15,23,42,0.03)`
       }}
     >
-      <div className="absolute top-0 right-0 w-24 h-24 rounded-bl-full opacity-[0.08]"
+      <div className="absolute top-0 right-0 w-24 h-24 rounded-bl-full opacity-[0.05]"
         style={{ background: `radial-gradient(circle at top right, ${hex}, transparent)` }} />
-      <div className="flex items-center gap-2 mb-3">
-        <div className="p-1.5 rounded-lg" style={{ background: `${hex}14` }}>
-          <Icon size={15} style={{ color: hex }} />
+      <div className="flex items-center gap-2 mb-4">
+        <div className="p-2 rounded-xl" style={{ background: `${hex}08`, border: `1px solid ${hex}15` }}>
+          <Icon size={18} style={{ color: hex }} />
         </div>
-        <span className="text-[11px] text-t3 uppercase tracking-wider font-semibold">{label}</span>
+        <span className="text-[11px] text-slate-400 uppercase tracking-widest font-bold font-jetbrains">{label}</span>
         {pulse && (
-          <span className="w-1.5 h-1.5 rounded-full ml-auto animate-gg-pulse"
-            style={{ background: hex, boxShadow: `0 0 6px ${hex}` }} />
+          <span className="w-2 h-2 rounded-full ml-auto animate-gg-pulse shadow-sm"
+            style={{ background: hex }} />
         )}
       </div>
-      <div className="text-[26px] font-bold leading-none font-chakra text-t1">{value}</div>
-      {sub && <div className="text-[11px] text-t2 mt-1.5">{sub}</div>}
+      <div className="text-[28px] font-extrabold leading-none tracking-tight text-slate-900">{value}</div>
+      {sub && <div className="text-[11px] text-slate-500 font-medium mt-2">{sub}</div>}
     </motion.div>
   );
 }
@@ -94,10 +94,9 @@ export function LegendDot({ color, label }) {
 export function StatPill({ label, value, colorClass }) {
   const hex = getHex(colorClass);
   return (
-    <div className="rounded-lg px-3 py-2"
-      style={{ background: 'rgba(22,32,50,0.8)', border: '1px solid rgba(30,45,69,0.6)' }}>
-      <div className="text-[9px] text-t3 uppercase font-bold tracking-widest">{label}</div>
-      <div className="text-[13px] font-bold font-chakra mt-0.5" style={{ color: hex }}>{value}</div>
+    <div className="rounded-xl px-4 py-2.5 bg-white border border-slate-100 shadow-sm transition-all hover:shadow-md">
+      <div className="text-[9px] text-slate-400 uppercase font-bold tracking-widest">{label}</div>
+      <div className="text-[14px] font-extrabold tracking-tight mt-0.5" style={{ color: hex }}>{value}</div>
     </div>
   );
 }
@@ -146,8 +145,8 @@ export function ActionBtn({ icon, label, colorClass, active, onClick }) {
       whileTap={{ scale: 0.97 }}
       className="w-full rounded-lg px-3.5 py-2.5 flex items-center gap-2 text-[12px] font-semibold transition-all cursor-pointer text-left"
       style={active
-        ? { background: `${hex}12`, border: `1px solid ${hex}38`, color: hex, boxShadow: `0 0 12px ${hex}18` }
-        : { background: 'rgba(22,32,50,0.6)', border: '1px solid rgba(30,45,69,0.6)', color: '#94a3b8' }
+        ? { background: 'white', border: `1px solid ${hex}`, color: hex, boxShadow: `0 8px 16px -4px ${hex}20` }
+        : { background: 'white', border: '1px solid #f1f5f9', color: '#64748b' }
       }
     >
       {icon} {label}

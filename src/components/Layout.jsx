@@ -73,7 +73,7 @@ export function Layout({ children, role, setRole, sideTab, setSideTab, criticalC
         <div className="ml-auto flex items-center gap-3">
           {/* Role switcher */}
           <div className="hidden md:flex rounded-xl p-1 gap-1"
-            style={{ background: 'rgba(5,8,15,0.6)', border: '1px solid rgba(30,45,69,0.8)' }}>
+            style={{ background: '#f1f5f9', border: '1px solid #e2e8f0' }}>
             {[
               { id: "admin",     icon: <Database size={13} />, label: "Admin" },
               { id: "inspector", icon: <Users size={13} />,    label: "Inspector" },
@@ -93,10 +93,10 @@ export function Layout({ children, role, setRole, sideTab, setSideTab, criticalC
           </div>
 
           {/* User */}
-          <div className="flex items-center gap-3 pl-3" style={{ borderLeft: '1px solid rgba(30,45,69,0.6)' }}>
+          <div className="flex items-center gap-3 pl-3" style={{ borderLeft: '1px solid #e2e8f0' }}>
             <div className="text-right hidden sm:block">
-              <div className="text-[11px] font-bold text-t1 leading-none">{user?.name || 'User'}</div>
-              <div className="text-[9px] text-t3 uppercase tracking-tighter mt-1">{role} Access</div>
+              <div className="text-[12px] font-bold text-slate-800 leading-none">{user?.name || 'User'}</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-tighter mt-1 font-bold">{role} Access</div>
             </div>
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold"
               style={role === "admin"
@@ -149,13 +149,11 @@ export function Layout({ children, role, setRole, sideTab, setSideTab, criticalC
                 />
               )}
               {/* Tooltip */}
-              <div className="absolute left-[52px] px-2.5 py-1.5 rounded-lg text-[11px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-semibold"
+              <div className="absolute left-[52px] px-3 py-2 rounded-xl text-[12px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 font-bold shadow-xl"
                 style={{
-                  background: 'rgba(11,17,32,0.95)',
-                  border: '1px solid rgba(56,189,248,0.15)',
-                  backdropFilter: 'blur(10px)',
-                  color: '#e2e8f0',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+                  background: '#0f172a',
+                  color: '#f8fafc',
+                  border: '1px solid #1e293b',
                 }}>
                 {t.label}
               </div>
@@ -163,7 +161,7 @@ export function Layout({ children, role, setRole, sideTab, setSideTab, criticalC
           ))}
 
           <div className="flex-1" />
-          <div className="w-6 h-px my-2" style={{ background: 'rgba(30,45,69,0.6)' }} />
+          <div className="w-6 h-px my-3 bg-slate-200" />
           <button className="w-10 h-10 rounded-xl flex items-center justify-center text-t3 hover:text-t2 transition-all cursor-pointer">
             <Activity size={17} />
           </button>
