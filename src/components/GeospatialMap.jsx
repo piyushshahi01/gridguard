@@ -47,7 +47,7 @@ export function GeospatialMap({ transformers }) {
           >
             <TileLayer
               attribution='&copy; <a href="https://carto.com/">CartoDB</a>'
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
             />
             {transformers.map((m) => {
               const status = m.status; // True ML status

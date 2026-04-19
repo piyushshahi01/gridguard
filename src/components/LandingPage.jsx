@@ -29,25 +29,25 @@ function Counter({ to, suffix = "", duration = 2 }) {
 /* ── Animated grid background ────────────────────── */
 function GridBg() {
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-bg0">
       {/* Moving grid */}
-      <div className="absolute inset-0 opacity-[0.03]"
+      <div className="absolute inset-0 opacity-[0.05]"
         style={{
-          backgroundImage: 'linear-gradient(to right, #38bdf8 1px, transparent 1px), linear-gradient(to bottom, #38bdf8 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(to right, #64748b 1px, transparent 1px), linear-gradient(to bottom, #64748b 1px, transparent 1px)',
           backgroundSize: '4rem 4rem',
         }}
       />
       {/* Radial gradient overlay */}
       <div className="absolute inset-0" style={{
-        background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(56,189,248,0.07) 0%, transparent 70%)',
+        background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(56,189,248,0.1) 0%, transparent 70%)',
       }} />
       {/* Bottom fade */}
       <div className="absolute bottom-0 left-0 right-0 h-64"
-        style={{ background: 'linear-gradient(to top, #05080f, transparent)' }} />
-      {/* Glowing orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-[0.04]"
+        style={{ background: 'linear-gradient(to top, #f8fafc, transparent)' }} />
+      {/* Soft Glowing orbs */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-[0.1]"
         style={{ background: 'radial-gradient(circle, #38bdf8, transparent)', filter: 'blur(60px)' }} />
-      <div className="absolute top-1/3 right-1/4 w-80 h-80 rounded-full opacity-[0.04]"
+      <div className="absolute top-1/3 right-1/4 w-80 h-80 rounded-full opacity-[0.1]"
         style={{ background: 'radial-gradient(circle, #a78bfa, transparent)', filter: 'blur(60px)' }} />
     </div>
   );
@@ -201,7 +201,7 @@ export function LandingPage({ onLaunch }) {
           initial={{ opacity: 0, y: 40, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
-          className="mt-16 w-full max-w-3xl glass-card rounded-2xl p-6 border border-grid-blue/10 glow-blue"
+          className="mt-16 w-full max-w-3xl glass-card rounded-2xl p-6 border border-border-grid box-glow"
         >
           <div className="flex items-center gap-2 mb-4">
             <div className="flex gap-1.5">

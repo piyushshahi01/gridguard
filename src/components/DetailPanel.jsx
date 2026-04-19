@@ -118,9 +118,9 @@ export function DetailPanel({ transformer: t, onBack, onDataUpdate, alerts }) {
           <div className="h-[280px] mt-2">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={t.meters} margin={{ top: 5, right: 20, left: -10, bottom: 0 }} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e2d45" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 10, fill: "#4b6080" }} tickLine={false} axisLine={false} />
-                <YAxis type="category" dataKey="id" tick={{ fontSize: 9, fill: "#94a3b8", fontWeight: 600 }}
+                <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false} />
+                <YAxis type="category" dataKey="id" tick={{ fontSize: 9, fill: "#475569", fontWeight: 600 }}
                   tickLine={false} axisLine={false} width={80} />
                 <Tooltip content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;

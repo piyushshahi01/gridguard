@@ -23,13 +23,10 @@ export function Layout({ children, role, setRole, sideTab, setSideTab, criticalC
     <div className="min-h-screen bg-bg0 text-t1 flex flex-col" style={{ fontFamily: 'var(--font-inter)' }}>
 
       {/* ── Header ─────────────────────────────────── */}
-      <header className="h-[54px] flex items-center px-5 gap-4 shrink-0 sticky top-0 z-50"
+      <header className="h-[54px] flex items-center px-5 gap-4 shrink-0 sticky top-0 z-50 glass"
         style={{
-          background: 'rgba(11,17,32,0.85)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(56,189,248,0.08)',
-          boxShadow: '0 1px 0 rgba(56,189,248,0.04), 0 4px 30px rgba(0,0,0,0.3)',
+          borderBottom: '1px solid rgba(15,23,42,0.08)',
+          boxShadow: '0 4px 20px -10px rgba(0,0,0,0.05)',
         }}
       >
         {/* Logo */}
@@ -125,10 +122,10 @@ export function Layout({ children, role, setRole, sideTab, setSideTab, criticalC
 
       <div className="flex flex-1 overflow-hidden">
         {/* ── Sidebar ─────────────────────────────── */}
-        <nav className="w-[60px] flex flex-col items-center py-4 gap-2 shrink-0"
+        <nav className="w-[60px] flex flex-col items-center py-4 gap-2 shrink-0 bg-bg2"
           style={{
-            background: 'rgba(11,17,32,0.8)',
-            borderRight: '1px solid rgba(56,189,248,0.05)',
+            borderRight: '1px solid rgba(15,23,42,0.08)',
+            boxShadow: '10px 0 20px -10px rgba(0,0,0,0.02)'
           }}>
           {tabs.map(t => (
             <motion.button
@@ -139,8 +136,8 @@ export function Layout({ children, role, setRole, sideTab, setSideTab, criticalC
               whileTap={{ scale: 0.93 }}
               className="w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer group relative"
               style={sideTab === t.id
-                ? { background: 'rgba(56,189,248,0.12)', color: '#38bdf8', boxShadow: '0 0 16px rgba(56,189,248,0.15)' }
-                : { color: '#4b6080' }
+                ? { background: 'rgba(37,99,235,0.1)', color: '#2563eb', boxShadow: 'inset 0 0 0 1px rgba(37,99,235,0.1)' }
+                : { color: '#94a3b8' }
               }
             >
               <t.icon size={18} strokeWidth={sideTab === t.id ? 2.5 : 1.8} />

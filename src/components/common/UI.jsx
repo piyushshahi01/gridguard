@@ -48,14 +48,13 @@ export function MetricCard({ icon: Icon, label, value, sub, colorClass = "text-g
     <motion.div
       whileHover={{ y: -3 }}
       transition={{ duration: 0.2 }}
-      className={cn("relative overflow-hidden rounded-xl p-4 transition-all", className)}
+      className={cn("relative overflow-hidden rounded-2xl p-5 transition-all glass-card", className)}
       style={{
-        background: 'linear-gradient(135deg, rgba(17,24,39,0.85) 0%, rgba(11,17,32,0.7) 100%)',
-        backdropFilter: 'blur(12px)',
-        border: `1px solid ${hex}18`,
+        border: `1px solid ${hex}30`,
+        boxShadow: `0 4px 20px -5px ${hex}15, 0 0 3px rgba(15,23,42,0.03)`
       }}
     >
-      <div className="absolute top-0 right-0 w-16 h-16 rounded-bl-full opacity-[0.06]"
+      <div className="absolute top-0 right-0 w-24 h-24 rounded-bl-full opacity-[0.08]"
         style={{ background: `radial-gradient(circle at top right, ${hex}, transparent)` }} />
       <div className="flex items-center gap-2 mb-3">
         <div className="p-1.5 rounded-lg" style={{ background: `${hex}14` }}>
