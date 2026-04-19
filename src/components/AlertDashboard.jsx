@@ -136,9 +136,15 @@ export function AlertDashboard({ data, onSelect }) {
                         <span className="flex items-center gap-1"><Clock size={10} className="text-grid-cyan"/> {a.time}</span>
                       </div>
                       {a.loss && (
-                        <div className="flex items-center gap-2 text-[11px] text-t2">
-                          <span className="w-16 text-t3 font-mono">EST_LOSS:</span>
-                          <span className="font-bold text-grid-red">{a.loss}%</span>
+                        <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-border-grid/50">
+                          <div className="flex items-center gap-2 text-[11px] text-t2">
+                            <span className="text-t3 font-mono">Dev:</span>
+                            <span className="font-bold text-grid-red">{a.deviation}%</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[11px] text-t2">
+                            <span className="text-t3 font-mono">Impact:</span>
+                            <span className="font-bold text-grid-red">₹{a.financial_loss}</span>
+                          </div>
                         </div>
                       )}
                     </div>

@@ -104,15 +104,15 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
   const inProgressCases = activeList.length;
 
   const actionStatusLabel = {
-    open: "Open", assigned: "Assigned", checked: "Completed", confirmed: "Theft Confirmed", false_alarm: "Resolved",
+    open: "Unassigned", assigned: "Assigned", in_progress: "In Progress", checked: "Completed", confirmed: "Theft Confirmed", false_alarm: "Resolved",
   };
 
   const actionStatusColor = {
-    open: "text-t3", assigned: "text-grid-blue", checked: "text-grid-amber", confirmed: "text-grid-red", false_alarm: "text-grid-green",
+    open: "text-t3", assigned: "text-grid-blue", in_progress: "text-grid-cyan", checked: "text-grid-amber", confirmed: "text-grid-red", false_alarm: "text-grid-green",
   };
 
   const actionStatusBg = {
-    open: "bg-bg2", assigned: "bg-grid-blue/10", checked: "bg-grid-amber/10", confirmed: "bg-grid-red/10", false_alarm: "bg-grid-green/10",
+    open: "bg-bg2", assigned: "bg-grid-blue/10", in_progress: "bg-grid-cyan/10", checked: "bg-grid-amber/10", confirmed: "bg-grid-red/10", false_alarm: "bg-grid-green/10",
   };
 
   return (
@@ -265,7 +265,7 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
             </div>
 
             {/* Graph Section */}
-            <div className="bg-bg2 border border-border-grid rounded-xl p-5">
+            <div className="glass-card border border-border-grid rounded-xl p-5">
               <div className="flex items-center justify-between mb-4">
                 <SectionTitle label="Supply vs. Consumption — 24h Load Profile" />
                 <div className="flex items-center gap-1.5 bg-grid-red/10 border border-grid-red/20 px-2.5 py-1 rounded-md">
@@ -303,23 +303,23 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
               </div>
               {/* Graph stats */}
               <div className="flex gap-4 mt-4 pt-3 border-t border-border-grid/50">
-                <div className="bg-bg3 px-3 py-2 rounded-lg">
+                <div className="bg-bg0/50 border border-border-grid/50 px-3 py-2 rounded-lg">
                   <div className="text-[9px] text-t3 uppercase font-bold tracking-widest">Avg Supply</div>
                   <div className="text-grid-green font-bold font-chakra">{Math.round(tx.timeSeries.reduce((s, d) => s + d.supply, 0) / tx.timeSeries.length)} kWh</div>
                 </div>
-                <div className="bg-bg3 px-3 py-2 rounded-lg">
+                <div className="bg-bg0/50 border border-border-grid/50 px-3 py-2 rounded-lg">
                   <div className="text-[9px] text-t3 uppercase font-bold tracking-widest">Avg Consumption</div>
                   <div className="text-grid-red font-bold font-chakra">{Math.round(tx.timeSeries.reduce((s, d) => s + d.consumption, 0) / tx.timeSeries.length)} kWh</div>
                 </div>
-                <div className="bg-bg3 px-3 py-2 rounded-lg">
-                  <div className="text-[9px] text-t3 uppercase font-bold tracking-widest">Peak Mismatch</div>
+                <div className="bg-bg0/50 border border-border-grid/50 px-3 py-2 rounded-lg">
+                  <div className="text-[9px] text-t3 uppercase font-bold tracking-widest">Unaccounted Loss</div>
                   <div className="text-grid-amber font-bold font-chakra">
                     {Math.max(...tx.timeSeries.map(d => Math.abs(d.supply - d.consumption)))} kWh
                   </div>
                 </div>
-                <div className="bg-bg3 px-3 py-2 rounded-lg">
-                  <div className="text-[9px] text-t3 uppercase font-bold tracking-widest">Loss Factor</div>
-                  <div className={`font-bold font-chakra ${tx.loss > 15 ? 'text-grid-red' : 'text-grid-amber'}`}>{tx.loss}%</div>
+                <div className="bg-bg0/50 border border-border-grid/50 px-3 py-2 rounded-lg">
+                  <div className="text-[9px] text-t3 uppercase font-bold tracking-widest">Deviation</div>
+                  <div className={`font-bold font-chakra ${selected.deviation > 5 ? 'text-grid-red' : 'text-grid-amber'}`}>{selected.deviation}%</div>
                 </div>
               </div>
             </div>
@@ -327,52 +327,52 @@ export function InspectorDashboard({ data, inspectorName, onDataUpdate }) {
             {/* AI Explanation + Actions */}
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
               {/* AI Forensic Analysis */}
-              <div className={`border-l-4 rounded-xl p-5 ${
+              <div className={`glass-card border-l-4 rounded-xl p-5 ${
                 selected.severity === 'critical'
-                  ? 'bg-grid-red/5 border border-grid-red/20 border-l-grid-red'
-                  : 'bg-grid-amber/5 border border-grid-amber/20 border-l-grid-amber'
+                  ? 'border-grid-red/20 border-l-grid-red shadow-[inset_0_0_40px_rgba(239,68,68,0.05)]'
+                  : 'border-grid-amber/20 border-l-grid-amber shadow-[inset_0_0_40px_rgba(245,158,11,0.05)]'
               }`}>
                 <div className="flex items-center gap-2 mb-3">
                   <AlertTriangle size={16} className={selected.severity === 'critical' ? 'text-grid-red' : 'text-grid-amber'} />
                   <SectionTitle label="AI Anomaly Explanation" className={selected.severity === 'critical' ? 'text-grid-red' : 'text-grid-amber'} />
                 </div>
-                <blockquote className="text-[14px] text-t2 leading-relaxed border-l-2 border-border-grid pl-4 italic">
-                  "{selected.explanation}"
+                <blockquote className="text-[14px] text-t1 font-medium leading-relaxed border-l-2 border-border-grid pl-4 py-1 italic bg-bg1/30 rounded-r-lg pr-3">
+                  "{selected.message || selected.explanation}"
                 </blockquote>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <span className="text-[10px] bg-bg2 border border-border-grid text-t2 px-2.5 py-1 rounded-md font-bold uppercase tracking-widest">
-                    Loss: {tx.loss}%
+                  <span className="text-[10px] bg-bg0/60 border border-border-grid text-t2 px-2.5 py-1 rounded-md font-bold uppercase tracking-widest">
+                    Loss: {selected.loss}%
                   </span>
-                  <span className="text-[10px] bg-bg2 border border-border-grid text-t2 px-2.5 py-1 rounded-md font-bold uppercase tracking-widest">
-                    {tx.meters.filter(m => m.anomaly).length} Anomalous Meters
+                  <span className="text-[10px] bg-bg0/60 border border-border-grid text-t2 px-2.5 py-1 rounded-md font-bold uppercase tracking-widest">
+                    Expected: {selected.expected}%
                   </span>
-                  <span className="text-[10px] bg-bg2 border border-border-grid text-t2 px-2.5 py-1 rounded-md font-bold uppercase tracking-widest">
-                    Pattern: {tx.loss > 50 ? 'Sudden Drop' : tx.loss > 30 ? 'Gradual Decline' : 'Flatline'}
+                  <span className="text-[10px] bg-grid-red/10 border border-grid-red/20 text-grid-red px-2.5 py-1 rounded-md font-bold uppercase tracking-widest">
+                    Impact: ₹{selected.financial_loss}
                   </span>
                 </div>
               </div>
 
               {/* Action Panel */}
-              <div className="bg-bg2 border border-border-grid rounded-xl p-5 flex flex-col">
+              <div className="glass-card border border-border-grid rounded-xl p-5 flex flex-col">
                 <SectionTitle label="Field Actions" className="mb-4" />
                 <div className="flex-1 space-y-2">
                   <ActionBtn
                     icon={<Eye size={14} />}
-                    label="Mark as Checked"
-                    colorClass="text-grid-amber"
-                    active={selected.actionStatus === "checked"}
-                    onClick={() => handleStatusUpdate("checked")}
+                    label="Mark In Progress"
+                    colorClass="text-grid-cyan"
+                    active={selected.actionStatus === "in_progress"}
+                    onClick={() => handleStatusUpdate("in_progress")}
                   />
                   <ActionBtn
                     icon={<XCircle size={14} />}
-                    label="Confirm Fraud / Theft"
+                    label="Resolve (Confirm Fraud)"
                     colorClass="text-grid-red"
                     active={selected.actionStatus === "confirmed"}
                     onClick={() => handleStatusUpdate("confirmed")}
                   />
                   <ActionBtn
                     icon={<CheckCircle size={14} />}
-                    label="False Alarm / Normal"
+                    label="Resolve (False Alarm)"
                     colorClass="text-grid-green"
                     active={selected.actionStatus === "false_alarm"}
                     onClick={() => handleStatusUpdate("false_alarm")}

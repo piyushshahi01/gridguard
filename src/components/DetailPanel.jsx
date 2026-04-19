@@ -42,7 +42,7 @@ export function DetailPanel({ transformer: t, onBack, onDataUpdate, alerts }) {
       <div className="flex items-center gap-4 py-2 flex-wrap">
         <button 
           onClick={onBack} 
-          className="bg-bg2 border border-border-grid rounded-lg px-4 py-2.5 text-t2 hover:text-t1 hover:border-border-hov transition-all flex items-center gap-2 text-[13px] font-medium cursor-pointer"
+          className="glass border border-border-grid rounded-lg px-4 py-2.5 text-t2 hover:text-t1 hover:border-border-hov transition-all flex items-center gap-2 text-[13px] font-medium cursor-pointer box-glow"
         >
           <ArrowLeft size={16} /> Back to Dashboard
         </button>
@@ -61,22 +61,22 @@ export function DetailPanel({ transformer: t, onBack, onDataUpdate, alerts }) {
 
       {/* metric row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard icon={Zap} label="Source Supply" value={`${t.supply} kWh`} sub="Measured at TX Output" colorClass="text-grid-green" />
+        <MetricCard icon={Zap} label="Source Supply" value={`${t.supply} kWh`} sub={`Expected Loss: ${t.expected || 11}%`} colorClass="text-grid-green" />
         <MetricCard icon={Activity} label="Aggregate Load" value={`${t.consumption} kWh`}
           sub="Sum of downstream meters" colorClass={t.consumption > t.supply ? "text-grid-red" : "text-grid-cyan"} />
-        <MetricCard icon={TrendingDown} label="Loss Factor"
+        <MetricCard icon={TrendingDown} label="Grid Loss & Deviation"
           value={`${t.loss > 0 ? "+" : ""}${t.loss}%`}
-          sub={t.loss > 15 ? "Critical Threshold" : "Statistical Baseline"}
-          colorClass={Math.abs(t.loss) > 15 ? "text-grid-red" : "text-grid-amber"} />
-        <MetricCard icon={AlertTriangle} label="Confidence Score" value={`${t.risk}%`}
-          sub={`${anomalyCount} node irregularit${anomalyCount !== 1 ? "ies" : "y"}`}
-          colorClass={colClass} pulse={t.status === "critical"} />
+          sub={`Deviation: ${t.deviation > 0 ? "+" : ""}${t.deviation}%`}
+          colorClass={t.deviation > 5 ? "text-grid-red" : "text-grid-amber"} />
+        <MetricCard icon={AlertTriangle} label="Financial Impact" value={`₹${t.financial_loss || 0}`}
+          sub="Est. revenue lost"
+          colorClass="text-grid-red" pulse={!!alert} />
       </div>
 
       {/* charts row */}
       <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-4">
         {/* time series */}
-        <div className="bg-bg2 border border-border-grid rounded-xl p-5">
+        <div className="glass-card border border-border-grid rounded-xl p-5">
           <SectionTitle label="Supply vs. Consumption — 24H Load Profile" className="mb-4" />
           <div className="flex gap-4 mb-5">
             <LegendDot color="#10b981" label="Transformer Supply" />
@@ -113,7 +113,7 @@ export function DetailPanel({ transformer: t, onBack, onDataUpdate, alerts }) {
         </div>
 
         {/* meter breakdown */}
-        <div className="bg-bg2 border border-border-grid rounded-xl p-5">
+        <div className="glass-card border border-border-grid rounded-xl p-5">
           <SectionTitle label="Individual Meter Deviations" className="mb-4" />
           <div className="h-[280px] mt-2">
             <ResponsiveContainer width="100%" height="100%">
@@ -163,60 +163,68 @@ export function DetailPanel({ transformer: t, onBack, onDataUpdate, alerts }) {
 
       {/* anomaly explanation and assignment footer */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-4 mt-2">
-        <div className="bg-grid-red/5 border border-grid-red/20 border-l-4 border-l-grid-red rounded-xl p-5">
+        <div className={`glass-card border-l-4 rounded-xl p-5 ${alert ? 'border-l-grid-red border-grid-red/20 shadow-[inset_0_0_40px_rgba(239,68,68,0.05)]' : 'border-l-grid-blue border-grid-blue/20'}`}>
           <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle size={18} className="text-grid-red" />
-            <SectionTitle label="Technical Forensic Analysis" className="text-grid-red" />
+            <AlertTriangle size={18} className={alert ? "text-grid-red" : "text-grid-blue"} />
+            <SectionTitle label="AI Forensic Analysis" className={alert ? "text-grid-red" : "text-grid-blue"} />
           </div>
-          <p className="text-[14px] text-t2 leading-relaxed">
-            {t.explanation}
+          <p className="text-[14px] text-t1 font-medium leading-relaxed">
+            {alert ? alert.message : t.explanation || "System performing within highly nominal parameters. No anomalies detected."}
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Tag label={`Calculated Risk: ${t.risk}%`} colorClass={colClass} />
-            <Tag label={`Unaccounted Energy: ${t.loss > 0 ? "+" : ""}${t.loss}%`} colorClass="text-grid-amber" />
-            <Tag label={`Priority Investigation`} colorClass="text-grid-red" />
+            <Tag label={`Unaccounted Energy: ${t.loss_kwh} kWh`} colorClass={t.loss_kwh > 20 ? "text-grid-red" : "text-grid-amber"} />
+            {alert && <Tag label={`Financial Impact: ₹${t.financial_loss}`} colorClass="text-grid-red" />}
           </div>
         </div>
 
-        {alert && (
-            <div className="bg-bg2 border border-border-grid rounded-xl p-5 flex flex-col">
-              <div className="flex items-center gap-2 mb-4">
-                <Users size={16} className="text-grid-blue" />
-                <SectionTitle label="Inspector Assignment" />
-              </div>
-              
-              <div className="flex-1 flex flex-col justify-center">
-                <div className="text-[12px] text-t2 mb-2">Current Status: <span className="font-bold text-t1 uppercase tracking-widest">{alert.actionStatus}</span></div>
-                
-                {alert.assignedTo && alert.assignedTo !== "Unassigned" ? (
-                  <div className="bg-bg3 border border-border-grid rounded-lg p-3 mt-2 flex items-center justify-between">
-                      <div className="flex flex-col">
-                          <span className="text-[10px] text-t3 uppercase font-bold tracking-widest">Assigned To</span>
-                          <span className="text-t1 font-bold">{alert.assignedTo}</span>
-                      </div>
-                      <div className="bg-grid-green/10 text-grid-green px-2 py-1 rounded text-[10px] font-bold uppercase"><Check size={12} className="inline mr-1" /> Active</div>
+
+
+        {/* Inspector Assignment */}
+        <div className="glass-card border border-border-grid rounded-xl p-5 flex flex-col justify-between">
+          <div>
+            <SectionTitle label="Field Operations" className="mb-4" />
+            
+            {alert ? (
+              alert.actionStatus === "open" ? (
+                <>
+                  <p className="text-[12px] text-t2 mb-3">Assign a field inspector to investigate the anomaly.</p>
+                  <select 
+                    value={selectedInsp.id}
+                    onChange={(e) => setSelectedInsp(INSPECTORS.find(i => i.id === e.target.value))}
+                    className="w-full bg-bg3 border border-border-grid rounded-lg p-2.5 text-[12px] text-t1 outline-none mb-4 focus:border-grid-blue transition-all"
+                  >
+                    {INSPECTORS.map(insp => (
+                      <option key={insp.id} value={insp.id}>{insp.name} — {insp.zone}</option>
+                    ))}
+                  </select>
+                  <button 
+                    onClick={handleAssign}
+                    disabled={isAssigning}
+                    className="w-full bg-grid-blue hover:bg-grid-cyan text-bg0 font-bold px-4 py-2.5 rounded-lg text-[13px] uppercase tracking-widest shadow-lg transition-all"
+                  >
+                    {isAssigning ? "Assigning..." : "Assign Field Inspector"}
+                  </button>
+                </>
+              ) : (
+                <div className="bg-bg3 border border-border-grid rounded-lg p-4 mb-4 flex gap-3 items-center">
+                  <div className="w-10 h-10 rounded-full bg-grid-amber/20 border border-grid-amber/30 flex items-center justify-center text-grid-amber font-bold">
+                    <Users size={16} />
                   </div>
-                ) : (
-                  <>
-                      <select 
-                        value={selectedInsp} 
-                        onChange={e => setSelectedInsp(e.target.value)}
-                        className="bg-bg3 border border-border-grid text-t1 text-[13px] rounded-lg p-2.5 outline-none mb-3 font-jetbrains"
-                      >
-                        {INSPECTORS.map(i => <option key={i} value={i}>{i}</option>)}
-                      </select>
-                      <button 
-                        onClick={handleAssign}
-                        disabled={isAssigning}
-                        className="bg-grid-blue hover:bg-grid-cyan text-bg0 font-bold px-4 py-2.5 rounded-lg text-[13px] uppercase tracking-widest shadow-lg transition-all"
-                      >
-                        {isAssigning ? "Assigning..." : "Assign Field Inspector"}
-                      </button>
-                  </>
-                )}
+                  <div>
+                    <div className="text-[10px] text-t3 uppercase font-bold tracking-widest">Assigned To</div>
+                    <div className="text-[13px] font-bold text-t1">{selectedInsp.name}</div>
+                  </div>
+                </div>
+              )
+            ) : (
+              <div className="bg-bg3 border border-border-grid rounded-lg p-4 flex flex-col items-center justify-center text-center gap-2 mb-4">
+                <Check size={20} className="text-grid-green" />
+                <span className="text-[12px] text-t2">No intervention required</span>
               </div>
-            </div>
-        )}
+            )}
+          </div>
+        </div>
       </div>
 
     </div>

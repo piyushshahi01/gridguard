@@ -55,6 +55,22 @@ def main():
             base_consume = float(row["meter_sum_kwh"])
             loss_pct = float(row["loss_percent"]) / 100.0
             is_anomaly = int(row["anomaly"]) == 1
+            zone = str(row["zone_type"])
+            
+            # Baseline expectations based on typical zone metrics
+            if "Industrial" in zone:
+                expected_pct = 6.0
+            elif "Commercial" in zone:
+                expected_pct = 8.0
+            elif "Agricultural" in zone:
+                expected_pct = 14.0
+            else:
+                expected_pct = 11.0
+                
+            actual_loss_val = round(float(row["loss_percent"]), 1)
+            deviation = round(actual_loss_val - expected_pct, 1)
+            loss_kwh = round(base_supply - base_consume, 1)
+            financial_cost = round(loss_kwh * 8.5) # Punjab avg industrial/commercial rate ₹8.5/unit
 
             ts = []
             for h in range(24):
@@ -81,15 +97,18 @@ def main():
 
             t = {
                 "id": row["transformer_id"],
-                "location": str(row["region"]) + " (" + str(row["zone_type"]) + ")",
+                "location": str(row["region"]) + " (" + zone + ")",
                 "lat": float(row["lat"]),
                 "lon": float(row["lon"]),
                 "supply": round(base_supply),
                 "consumption": round(base_consume),
-                "loss": round(float(row["loss_percent"]), 1),
+                "loss": actual_loss_val,
+                "expected": expected_pct,
+                "deviation": deviation,
+                "loss_kwh": loss_kwh,
+                "financial_loss": financial_cost,
                 "risk": round(float(row["risk_score"])),
-                "status": "critical" if int(row["anomaly"]) == 1 and float(row["risk_score"]) >= 60 else "warning" if float(row["risk_score"]) >= 30 else "safe",
-                # Metrics for the charts based on real consumption with history
+                "status": "critical" if is_anomaly and float(row["risk_score"]) >= 60 else "warning" if float(row["risk_score"]) >= 30 else "safe",
                 "timeSeries": ts,
                 "meters": []
             }
@@ -106,7 +125,11 @@ def main():
                     "severity": "critical",
                     "actionStatus": "open",
                     "loss": t["loss"],
-                    "message": f"ML detected abnormal energy loss of {t['loss']}% — possible meter tampering or illegal bypass.",
+                    "expected": expected_pct,
+                    "deviation": "+"+str(deviation) if deviation > 0 else str(deviation),
+                    "loss_kwh": loss_kwh,
+                    "financial_loss": financial_cost,
+                    "message": f"Observed {t['loss']}% loss in a {zone} feeder where expected baseline is {expected_pct}%, indicating highly abnormal non-technical loss. Financial impact: ₹{financial_cost}.",
                     "time": "Just Now",
                     "timestamp": "Just Now",
                     "status": "active"
